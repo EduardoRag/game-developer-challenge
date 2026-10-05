@@ -81,10 +81,6 @@ export class Game {
             return;
         }
 
-        if (this.input.isPressed('KeyW', 'ArrowUp')) {
-            this.player.moveForward(deltaTime);
-        }
-
         if (this.input.isPressed('KeyA', 'ArrowLeft')) {
             this.player.rotate(-1, deltaTime);
         }
@@ -93,10 +89,43 @@ export class Game {
             this.player.rotate(1, deltaTime);
         }
 
+        if (this.input.isPressed('KeyW', 'ArrowUp')) {
+            const movement = this.player.getForwardMovement(deltaTime);
+
+            this.player.move(movement.x, 0);
+
+            if (this.isPlayerCollidingWithObstacle()) {
+                this.player.move(-movement.x, 0);
+            }
+
+            this.player.move(0, movement.y);
+
+            if (this.isPlayerCollidingWithObstacle()) {
+                this.player.move(0, -movement.y);
+            }
+        }
+
         this.player.constrainToBounds(
             this.app.screen.width,
             this.app.screen.height,
         );
+    }
+
+    private isPlayerCollidingWithObstacle() {
+        if (!this.player) {
+            return false;
+        }
+
+        const playerBounds = this.player.getBounds();
+
+        return this.world.obstacles.some((obstacle) => {
+            return (
+                playerBounds.x < obstacle.x + obstacle.width &&
+                playerBounds.x + playerBounds.width > obstacle.x &&
+                playerBounds.y < obstacle.y + obstacle.height &&
+                playerBounds.y + playerBounds.height > obstacle.y
+            );
+        });
     }
 
     private async createPlayer() {

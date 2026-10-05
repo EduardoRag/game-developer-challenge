@@ -13,6 +13,13 @@ export class Player {
         this.sprite.anchor.set(0.5);
     }
 
+    public getPosition() {
+        return {
+            x: this.sprite.x,
+            y: this.sprite.y,
+        };
+    }
+
     public setPosition(x: number, y: number) {
         this.sprite.position.set(x, y);
     }
@@ -21,12 +28,19 @@ export class Player {
         return this.health;
     }
 
-    public moveForward(deltaTime: number) {
+    public getForwardMovement(deltaTime: number) {
         const distance = GAME_CONFIG.player.moveSpeed * deltaTime;
         const direction = this.sprite.rotation + Math.PI / 2;
 
-        this.sprite.x += Math.cos(direction) * distance;
-        this.sprite.y += Math.sin(direction) * distance;
+        return {
+            x: Math.cos(direction) * distance,
+            y: Math.sin(direction) * distance,
+        };
+    }
+
+    public move(x: number, y: number) {
+        this.sprite.x += x;
+        this.sprite.y += y;
     }
 
     public rotate(direction: number, deltaTime: number) {
@@ -47,5 +61,9 @@ export class Player {
             halfHeight,
             Math.min(height - halfHeight, this.sprite.y),
         );
+    }
+
+    public getBounds() {
+        return this.sprite.getBounds();
     }
 }

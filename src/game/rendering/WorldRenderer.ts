@@ -55,12 +55,13 @@ export class WorldRenderer {
         const startY = 200;
 
         const islandSize = GAME_CONFIG.world.tileSize * 3;
+        const collisionPadding = 16;
 
         this.obstacles.push({
-            x: startX,
-            y: startY,
-            width: islandSize,
-            height: islandSize,
+            x: startX + collisionPadding,
+            y: startY + collisionPadding,
+            width: islandSize - collisionPadding * 2,
+            height: islandSize - collisionPadding * 2,
         });
 
         for (let row = 0; row < tileNumbers.length; row++) {
