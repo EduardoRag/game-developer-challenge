@@ -1,5 +1,7 @@
+import { GameCanvas } from './game/rendering/GameCanvas';
+
 const App = () => {
-  return <div>Pirate Battle</div>;
+  return <GameCanvas />;
 };
 
 export default App;
