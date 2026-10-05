@@ -2,28 +2,34 @@ import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
 
-type Obstacle = {
+type Rectangle = {
     x: number;
     y: number;
     width: number;
     height: number;
 };
 
+type Obstacle = Rectangle;
+
 export class CollisionSystem {
+    private intersects(a: Rectangle, b: Rectangle) {
+        return (
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y
+        );
+    }
+
     public isPlayerCollidingWithObstacle(
         player: Player,
         obstacles: Obstacle[],
     ) {
         const playerBounds = player.getBounds();
 
-        return obstacles.some((obstacle) => {
-            return (
-                playerBounds.x < obstacle.x + obstacle.width &&
-                playerBounds.x + playerBounds.width > obstacle.x &&
-                playerBounds.y < obstacle.y + obstacle.height &&
-                playerBounds.y + playerBounds.height > obstacle.y
-            );
-        });
+        return obstacles.some((obstacle) =>
+            this.intersects(playerBounds, obstacle),
+        );
     }
 
     public isEnemyCollidingWithObstacle(
@@ -32,14 +38,9 @@ export class CollisionSystem {
     ) {
         const enemyBounds = enemy.getBounds();
 
-        return obstacles.some((obstacle) => {
-            return (
-                enemyBounds.x < obstacle.x + obstacle.width &&
-                enemyBounds.x + enemyBounds.width > obstacle.x &&
-                enemyBounds.y < obstacle.y + obstacle.height &&
-                enemyBounds.y + enemyBounds.height > obstacle.y
-            );
-        });
+        return obstacles.some((obstacle) =>
+            this.intersects(enemyBounds, obstacle),
+        );
     }
 
     public isProjectileCollidingWithObstacle(
@@ -48,28 +49,28 @@ export class CollisionSystem {
     ) {
         const projectileBounds = projectile.sprite.getBounds();
 
-        return obstacles.some((obstacle) => {
-            return (
-                projectileBounds.x < obstacle.x + obstacle.width &&
-                projectileBounds.x + projectileBounds.width > obstacle.x &&
-                projectileBounds.y < obstacle.y + obstacle.height &&
-                projectileBounds.y + projectileBounds.height > obstacle.y
-            );
-        });
+        return obstacles.some((obstacle) =>
+            this.intersects(projectileBounds, obstacle),
+        );
     }
 
     public isProjectileCollidingWithEnemy(
         projectile: Projectile,
         enemy: Enemy,
     ) {
-        const projectileBounds = projectile.sprite.getBounds();
-        const enemyBounds = enemy.getBounds();
+        return this.intersects(
+            projectile.sprite.getBounds(),
+            enemy.getBounds(),
+        );
+    }
 
-        return (
-            projectileBounds.x < enemyBounds.x + enemyBounds.width &&
-            projectileBounds.x + projectileBounds.width > enemyBounds.x &&
-            projectileBounds.y < enemyBounds.y + enemyBounds.height &&
-            projectileBounds.y + projectileBounds.height > enemyBounds.y
+    public isEnemyCollidingWithPlayer(
+        enemy: Enemy,
+        player: Player,
+    ) {
+        return this.intersects(
+            enemy.getBounds(),
+            player.getBounds(),
         );
     }
 }

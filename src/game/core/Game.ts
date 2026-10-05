@@ -151,7 +151,10 @@ export class Game {
             }
 
             if (
-                this.isEnemyCollidingWithPlayer(enemy) &&
+                this.collisionSystem.isEnemyCollidingWithPlayer(
+                    enemy,
+                    this.player,
+                ) &&
                 this.chaserContactCooldown <= 0
             ) {
                 this.player.takeDamage(
@@ -404,22 +407,6 @@ export class Game {
             x > this.app.screen.width ||
             y < 0 ||
             y > this.app.screen.height
-        );
-    }
-
-    private isEnemyCollidingWithPlayer(enemy: Enemy) {
-        if (!this.player) {
-            return false;
-        }
-
-        const enemyBounds = enemy.getBounds();
-        const playerBounds = this.player.getBounds();
-
-        return (
-            enemyBounds.x < playerBounds.x + playerBounds.width &&
-            enemyBounds.x + enemyBounds.width > playerBounds.x &&
-            enemyBounds.y < playerBounds.y + playerBounds.height &&
-            enemyBounds.y + enemyBounds.height > playerBounds.y
         );
     }
 
