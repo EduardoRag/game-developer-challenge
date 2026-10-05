@@ -4,4 +4,8 @@ export const GAME_CONFIG = {
         moveSpeed: 180,
         rotationSpeed: 2.5,
     },
+
+    world: {
+        tileSize: 64,
+    }
 } as const;

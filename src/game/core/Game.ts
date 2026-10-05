@@ -1,10 +1,15 @@
 import { Application, Assets } from 'pixi.js';
+import { WorldRenderer } from '../rendering/WorldRenderer';
+
+
 import { Player } from '../entities/Player';
 import { InputManager } from '../input/InputManager';
 
 export class Game {
     private readonly app: Application;
     private readonly container: HTMLDivElement;
+
+    private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
 
     private player: Player | null = null;
@@ -32,6 +37,17 @@ export class Game {
         }
 
         this.container.appendChild(this.app.canvas);
+
+        await this.world.initialize(
+            this.app.screen.width,
+            this.app.screen.height,
+        );
+
+        if (this.destroyed) {
+            return;
+        }
+
+        this.app.stage.addChild(this.world.container);
 
         await this.createPlayer();
 
