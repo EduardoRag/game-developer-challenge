@@ -57,6 +57,44 @@ export class Player {
         };
     }
 
+    public getLeftDirection() {
+        const direction = this.sprite.rotation;
+
+        return {
+            x: Math.cos(direction),
+            y: Math.sin(direction),
+        };
+    }
+
+    public getRightDirection() {
+        const direction = this.sprite.rotation + Math.PI;
+
+        return {
+            x: Math.cos(direction),
+            y: Math.sin(direction),
+        };
+    }
+
+    public getLeftPosition() {
+        const direction = this.getLeftDirection();
+        const distanceFromCenter = this.sprite.width / 2;
+
+        return {
+            x: this.sprite.x + direction.x * distanceFromCenter,
+            y: this.sprite.y + direction.y * distanceFromCenter,
+        };
+    }
+
+    public getRightPosition() {
+        const direction = this.getRightDirection();
+        const distanceFromCenter = this.sprite.width / 2;
+
+        return {
+            x: this.sprite.x + direction.x * distanceFromCenter,
+            y: this.sprite.y + direction.y * distanceFromCenter,
+        };
+    }
+
     public move(x: number, y: number) {
         this.sprite.x += x;
         this.sprite.y += y;

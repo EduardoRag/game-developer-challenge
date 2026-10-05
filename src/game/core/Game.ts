@@ -126,6 +126,14 @@ export class Game {
             this.fireFrontCannon();
         }
 
+        if (this.input.wasPressed('KeyQ')) {
+            this.fireLeftCannon();
+        }
+
+        if (this.input.wasPressed('KeyE')) {
+            this.fireRightCannon();
+        }
+
         for (let index = this.projectiles.length - 1; index >= 0; index--) {
             const projectile = this.projectiles[index];
 
@@ -163,6 +171,72 @@ export class Game {
 
         this.projectiles.push(projectile);
         this.app.stage.addChild(projectile.sprite);
+    }
+
+    private fireLeftCannon() {
+        if (!this.player) {
+            return;
+        }
+
+        this.fireBroadside(
+            this.player.getLeftPosition(),
+            this.player.getLeftDirection(),
+        );
+    }
+
+    private fireRightCannon() {
+        if (!this.player) {
+            return;
+        }
+
+        this.fireBroadside(
+            this.player.getRightPosition(),
+            this.player.getRightDirection(),
+        );
+    }
+
+    private fireBroadside(
+        position: { x: number; y: number },
+        direction: { x: number; y: number },
+    ) {
+        if (!this.projectileTexture || !this.player) {
+            return;
+        }
+
+        const forwardDirection = this.player.getForwardDirection();
+
+        const spacing = 20;
+        const spread = 0.2;
+
+        const shots = [
+            { offset: -spacing, spread: -spread },
+            { offset: 0, spread: 0 },
+            { offset: spacing, spread },
+        ];
+
+        for (const shot of shots) {
+            const directionX =
+                direction.x + forwardDirection.x * shot.spread;
+
+            const directionY =
+                direction.y + forwardDirection.y * shot.spread;
+
+            const length = Math.hypot(directionX, directionY);
+
+            const projectile = new Projectile(
+                this.projectileTexture,
+                directionX / length,
+                directionY / length,
+            );
+
+            projectile.sprite.position.set(
+                position.x + forwardDirection.x * shot.offset,
+                position.y + forwardDirection.y * shot.offset,
+            );
+
+            this.projectiles.push(projectile);
+            this.app.stage.addChild(projectile.sprite);
+        }
     }
 
     private isProjectileOutsideArena(projectile: Projectile) {
