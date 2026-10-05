@@ -263,7 +263,10 @@ export class Game {
             projectile.update(deltaTime);
 
             const hitEnemy = this.enemies.find((enemy) =>
-                this.isProjectileCollidingWithEnemy(projectile, enemy),
+                this.collisionSystem.isProjectileCollidingWithEnemy(
+                    projectile,
+                    enemy,
+                ),
             );
 
             if (hitEnemy) {
@@ -401,21 +404,6 @@ export class Game {
             x > this.app.screen.width ||
             y < 0 ||
             y > this.app.screen.height
-        );
-    }
-
-    private isProjectileCollidingWithEnemy(
-        projectile: Projectile,
-        enemy: Enemy,
-    ) {
-        const projectileBounds = projectile.sprite.getBounds();
-        const enemyBounds = enemy.getBounds();
-
-        return (
-            projectileBounds.x < enemyBounds.x + enemyBounds.width &&
-            projectileBounds.x + projectileBounds.width > enemyBounds.x &&
-            projectileBounds.y < enemyBounds.y + enemyBounds.height &&
-            projectileBounds.y + projectileBounds.height > enemyBounds.y
         );
     }
 

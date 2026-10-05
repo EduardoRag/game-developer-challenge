@@ -57,4 +57,19 @@ export class CollisionSystem {
             );
         });
     }
+
+    public isProjectileCollidingWithEnemy(
+        projectile: Projectile,
+        enemy: Enemy,
+    ) {
+        const projectileBounds = projectile.sprite.getBounds();
+        const enemyBounds = enemy.getBounds();
+
+        return (
+            projectileBounds.x < enemyBounds.x + enemyBounds.width &&
+            projectileBounds.x + projectileBounds.width > enemyBounds.x &&
+            projectileBounds.y < enemyBounds.y + enemyBounds.height &&
+            projectileBounds.y + projectileBounds.height > enemyBounds.y
+        );
+    }
 }
