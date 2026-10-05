@@ -3,6 +3,8 @@ import { WorldRenderer } from '../rendering/WorldRenderer';
 
 import { GAME_CONFIG } from '../config/gameConfig';
 
+import { CollisionSystem } from '../systems/CollisionSystem';
+
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -18,6 +20,7 @@ export class Game {
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
+    private readonly collisionSystem = new CollisionSystem();
 
     private frontCannonCooldown = 0;
     private leftCannonCooldown = 0;
@@ -135,7 +138,12 @@ export class Game {
                 GAME_CONFIG.enemy.chaser.moveSpeed,
             );
 
-            if (this.isEnemyCollidingWithObstacle(enemy)) {
+            if (
+                this.collisionSystem.isEnemyCollidingWithObstacle(
+                    enemy,
+                    this.world.obstacles,
+                )
+            ) {
                 enemy.setPosition(
                     previousPosition.x,
                     previousPosition.y,
@@ -193,13 +201,23 @@ export class Game {
 
             this.player.move(movement.x, 0);
 
-            if (this.isPlayerCollidingWithObstacle()) {
+            if (
+                this.collisionSystem.isPlayerCollidingWithObstacle(
+                    this.player,
+                    this.world.obstacles,
+                )
+            ) {
                 this.player.move(-movement.x, 0);
             }
 
             this.player.move(0, movement.y);
 
-            if (this.isPlayerCollidingWithObstacle()) {
+            if (
+                this.collisionSystem.isPlayerCollidingWithObstacle(
+                    this.player,
+                    this.world.obstacles,
+                )
+            ) {
                 this.player.move(0, -movement.y);
             }
         }
@@ -261,7 +279,10 @@ export class Game {
 
             if (
                 this.isProjectileOutsideArena(projectile) ||
-                this.isProjectileCollidingWithObstacle(projectile)
+                this.collisionSystem.isProjectileCollidingWithObstacle(
+                    projectile,
+                    this.world.obstacles,
+                )
             ) {
                 this.app.stage.removeChild(projectile.sprite);
                 projectile.sprite.destroy();
@@ -383,19 +404,6 @@ export class Game {
         );
     }
 
-    private isProjectileCollidingWithObstacle(projectile: Projectile) {
-        const projectileBounds = projectile.sprite.getBounds();
-
-        return this.world.obstacles.some((obstacle) => {
-            return (
-                projectileBounds.x < obstacle.x + obstacle.width &&
-                projectileBounds.x + projectileBounds.width > obstacle.x &&
-                projectileBounds.y < obstacle.y + obstacle.height &&
-                projectileBounds.y + projectileBounds.height > obstacle.y
-            );
-        });
-    }
-
     private isProjectileCollidingWithEnemy(
         projectile: Projectile,
         enemy: Enemy,
@@ -409,36 +417,6 @@ export class Game {
             projectileBounds.y < enemyBounds.y + enemyBounds.height &&
             projectileBounds.y + projectileBounds.height > enemyBounds.y
         );
-    }
-
-    private isPlayerCollidingWithObstacle() {
-        if (!this.player) {
-            return false;
-        }
-
-        const playerBounds = this.player.getBounds();
-
-        return this.world.obstacles.some((obstacle) => {
-            return (
-                playerBounds.x < obstacle.x + obstacle.width &&
-                playerBounds.x + playerBounds.width > obstacle.x &&
-                playerBounds.y < obstacle.y + obstacle.height &&
-                playerBounds.y + playerBounds.height > obstacle.y
-            );
-        });
-    }
-
-    private isEnemyCollidingWithObstacle(enemy: Enemy) {
-        const enemyBounds = enemy.getBounds();
-
-        return this.world.obstacles.some((obstacle) => {
-            return (
-                enemyBounds.x < obstacle.x + obstacle.width &&
-                enemyBounds.x + enemyBounds.width > obstacle.x &&
-                enemyBounds.y < obstacle.y + obstacle.height &&
-                enemyBounds.y + enemyBounds.height > obstacle.y
-            );
-        });
     }
 
     private isEnemyCollidingWithPlayer(enemy: Enemy) {
