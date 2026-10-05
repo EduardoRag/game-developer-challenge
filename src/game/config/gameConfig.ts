@@ -10,8 +10,18 @@ export const GAME_CONFIG = {
         },
     },
 
+    enemy: {
+        chaser: {
+            maxHealth: 50,
+            moveSpeed: 100,
+            contactDamage: 20,
+            contactDamageCooldown: 1,
+        },
+    },
+
     projectile: {
         speed: 500,
+        damage: 25
     },
 
     world: {

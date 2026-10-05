@@ -3,14 +3,18 @@ import { WorldRenderer } from '../rendering/WorldRenderer';
 
 import { GAME_CONFIG } from '../config/gameConfig';
 
+import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
 
 import { InputManager } from '../input/InputManager';
 
+type GameState = 'playing' | 'gameOver';
+
 export class Game {
     private readonly app: Application;
     private readonly container: HTMLDivElement;
+    private gameState: GameState = 'playing';
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
@@ -19,7 +23,11 @@ export class Game {
     private leftCannonCooldown = 0;
     private rightCannonCooldown = 0;
 
+    private chaserContactCooldown = 0;
+
     private player: Player | null = null;
+    private readonly enemies: Enemy[] = [];
+
     private projectileTexture: Texture | null = null;
     private readonly projectiles: Projectile[] = [];
 
@@ -64,6 +72,15 @@ export class Game {
             return;
         }
 
+        await this.createChaser(
+            this.app.screen.width * 0.75,
+            this.app.screen.height * 0.5,
+        );
+
+        if (this.destroyed) {
+            return;
+        }
+
         this.projectileTexture = await Assets.load(
             '/assets/png/default/ship_parts/cannon_ball.png',
         );
@@ -98,6 +115,51 @@ export class Game {
             return;
         }
 
+        if (this.gameState !== 'playing') {
+            this.input.clearFrameState();
+            return;
+        }
+
+        for (const enemy of this.enemies) {
+            const playerPosition = this.player.getPosition();
+
+            enemy.faceTarget(
+                playerPosition.x,
+                playerPosition.y,
+            );
+
+            const previousPosition = enemy.getPosition();
+
+            enemy.moveForward(
+                deltaTime,
+                GAME_CONFIG.enemy.chaser.moveSpeed,
+            );
+
+            if (this.isEnemyCollidingWithObstacle(enemy)) {
+                enemy.setPosition(
+                    previousPosition.x,
+                    previousPosition.y,
+                );
+            }
+
+            if (
+                this.isEnemyCollidingWithPlayer(enemy) &&
+                this.chaserContactCooldown <= 0
+            ) {
+                this.player.takeDamage(
+                    GAME_CONFIG.enemy.chaser.contactDamage,
+                );
+
+                this.chaserContactCooldown =
+                    GAME_CONFIG.enemy.chaser.contactDamageCooldown;
+
+                console.log(
+                    'Player health:',
+                    this.player.getHealth(),
+                );
+            }
+        }
+
         this.frontCannonCooldown = Math.max(
             0,
             this.frontCannonCooldown - deltaTime,
@@ -111,6 +173,11 @@ export class Game {
         this.rightCannonCooldown = Math.max(
             0,
             this.rightCannonCooldown - deltaTime,
+        );
+
+        this.chaserContactCooldown = Math.max(
+            0,
+            this.chaserContactCooldown - deltaTime,
         );
 
         if (this.input.isPressed('KeyA', 'ArrowLeft')) {
@@ -177,6 +244,21 @@ export class Game {
 
             projectile.update(deltaTime);
 
+            const hitEnemy = this.enemies.find((enemy) =>
+                this.isProjectileCollidingWithEnemy(projectile, enemy),
+            );
+
+            if (hitEnemy) {
+                hitEnemy.takeDamage(GAME_CONFIG.projectile.damage);
+
+                this.app.stage.removeChild(projectile.sprite);
+                projectile.sprite.destroy();
+
+                this.projectiles.splice(index, 1);
+
+                continue;
+            }
+
             if (
                 this.isProjectileOutsideArena(projectile) ||
                 this.isProjectileCollidingWithObstacle(projectile)
@@ -186,6 +268,19 @@ export class Game {
 
                 this.projectiles.splice(index, 1);
             }
+        }
+
+        for (let index = this.enemies.length - 1; index >= 0; index--) {
+            const enemy = this.enemies[index];
+
+            if (!enemy.isDead()) {
+                continue;
+            }
+
+            this.app.stage.removeChild(enemy.sprite);
+            enemy.sprite.destroy();
+
+            this.enemies.splice(index, 1);
         }
 
         this.input.clearFrameState();
@@ -301,6 +396,21 @@ export class Game {
         });
     }
 
+    private isProjectileCollidingWithEnemy(
+        projectile: Projectile,
+        enemy: Enemy,
+    ) {
+        const projectileBounds = projectile.sprite.getBounds();
+        const enemyBounds = enemy.getBounds();
+
+        return (
+            projectileBounds.x < enemyBounds.x + enemyBounds.width &&
+            projectileBounds.x + projectileBounds.width > enemyBounds.x &&
+            projectileBounds.y < enemyBounds.y + enemyBounds.height &&
+            projectileBounds.y + projectileBounds.height > enemyBounds.y
+        );
+    }
+
     private isPlayerCollidingWithObstacle() {
         if (!this.player) {
             return false;
@@ -316,6 +426,35 @@ export class Game {
                 playerBounds.y + playerBounds.height > obstacle.y
             );
         });
+    }
+
+    private isEnemyCollidingWithObstacle(enemy: Enemy) {
+        const enemyBounds = enemy.getBounds();
+
+        return this.world.obstacles.some((obstacle) => {
+            return (
+                enemyBounds.x < obstacle.x + obstacle.width &&
+                enemyBounds.x + enemyBounds.width > obstacle.x &&
+                enemyBounds.y < obstacle.y + obstacle.height &&
+                enemyBounds.y + enemyBounds.height > obstacle.y
+            );
+        });
+    }
+
+    private isEnemyCollidingWithPlayer(enemy: Enemy) {
+        if (!this.player) {
+            return false;
+        }
+
+        const enemyBounds = enemy.getBounds();
+        const playerBounds = this.player.getBounds();
+
+        return (
+            enemyBounds.x < playerBounds.x + playerBounds.width &&
+            enemyBounds.x + enemyBounds.width > playerBounds.x &&
+            enemyBounds.y < playerBounds.y + playerBounds.height &&
+            enemyBounds.y + enemyBounds.height > playerBounds.y
+        );
     }
 
     private async createPlayer() {
@@ -335,6 +474,23 @@ export class Game {
         );
 
         this.app.stage.addChild(this.player.sprite);
+    }
+
+    private async createChaser(x: number, y: number) {
+        const texture = await Assets.load(
+            '/assets/png/default/ships/ship_2.png',
+        );
+
+        if (this.destroyed) {
+            return;
+        }
+
+        const chaser = new Enemy(texture, 'chaser');
+
+        chaser.setPosition(x, y);
+
+        this.enemies.push(chaser);
+        this.app.stage.addChild(chaser.sprite);
     }
 
     private destroyApplication() {

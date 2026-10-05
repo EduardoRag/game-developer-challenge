@@ -5,7 +5,7 @@ import { GAME_CONFIG } from '../config/gameConfig';
 export class Player {
     public readonly sprite: Sprite;
 
-    private health = GAME_CONFIG.player.maxHealth;
+    private health: number = GAME_CONFIG.player.maxHealth;
 
     constructor(texture: Texture) {
         this.sprite = new Sprite(texture);
@@ -22,6 +22,14 @@ export class Player {
 
     public setPosition(x: number, y: number) {
         this.sprite.position.set(x, y);
+    }
+
+    public takeDamage(damage: number) {
+        this.health = Math.max(0, this.health - damage);
+    }
+
+    public isDead() {
+        return this.health <= 0;
     }
 
     public getHealth() {
