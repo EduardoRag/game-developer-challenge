@@ -1,6 +1,7 @@
 import { Application, Assets, Texture } from 'pixi.js';
 import { WorldRenderer } from '../rendering/WorldRenderer';
 
+import { GAME_CONFIG } from '../config/gameConfig';
 
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
@@ -13,6 +14,10 @@ export class Game {
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
+
+    private frontCannonCooldown = 0;
+    private leftCannonCooldown = 0;
+    private rightCannonCooldown = 0;
 
     private player: Player | null = null;
     private projectileTexture: Texture | null = null;
@@ -93,6 +98,21 @@ export class Game {
             return;
         }
 
+        this.frontCannonCooldown = Math.max(
+            0,
+            this.frontCannonCooldown - deltaTime,
+        );
+
+        this.leftCannonCooldown = Math.max(
+            0,
+            this.leftCannonCooldown - deltaTime,
+        );
+
+        this.rightCannonCooldown = Math.max(
+            0,
+            this.rightCannonCooldown - deltaTime,
+        );
+
         if (this.input.isPressed('KeyA', 'ArrowLeft')) {
             this.player.rotate(-1, deltaTime);
         }
@@ -122,16 +142,34 @@ export class Game {
             this.app.screen.height,
         );
 
-        if (this.input.wasPressed('Space')) {
+        if (
+            this.input.wasPressed('Space') &&
+            this.frontCannonCooldown <= 0
+        ) {
             this.fireFrontCannon();
+
+            this.frontCannonCooldown =
+                GAME_CONFIG.player.fireCooldown.front;
         }
 
-        if (this.input.wasPressed('KeyQ')) {
+        if (
+            this.input.wasPressed('KeyQ') &&
+            this.leftCannonCooldown <= 0
+        ) {
             this.fireLeftCannon();
+
+            this.leftCannonCooldown =
+                GAME_CONFIG.player.fireCooldown.broadside;
         }
 
-        if (this.input.wasPressed('KeyE')) {
+        if (
+            this.input.wasPressed('KeyE') &&
+            this.rightCannonCooldown <= 0
+        ) {
             this.fireRightCannon();
+
+            this.rightCannonCooldown =
+                GAME_CONFIG.player.fireCooldown.broadside;
         }
 
         for (let index = this.projectiles.length - 1; index >= 0; index--) {

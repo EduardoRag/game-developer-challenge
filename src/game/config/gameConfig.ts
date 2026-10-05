@@ -3,6 +3,11 @@ export const GAME_CONFIG = {
         maxHealth: 100,
         moveSpeed: 180,
         rotationSpeed: 2.5,
+
+        fireCooldown: {
+            front: 0.7,
+            broadside: 1.2,
+        },
     },
 
     projectile: {
