@@ -5,7 +5,11 @@ export const GAME_CONFIG = {
         rotationSpeed: 2.5,
     },
 
+    projectile: {
+        speed: 500,
+    },
+
     world: {
         tileSize: 64,
-    }
+    },
 } as const;

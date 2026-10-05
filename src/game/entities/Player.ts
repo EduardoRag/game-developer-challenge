@@ -38,6 +38,25 @@ export class Player {
         };
     }
 
+    public getForwardDirection() {
+        const direction = this.sprite.rotation + Math.PI / 2;
+
+        return {
+            x: Math.cos(direction),
+            y: Math.sin(direction),
+        };
+    }
+
+    public getFrontPosition() {
+        const direction = this.getForwardDirection();
+        const distanceFromCenter = this.sprite.height / 2;
+
+        return {
+            x: this.sprite.x + direction.x * distanceFromCenter,
+            y: this.sprite.y + direction.y * distanceFromCenter,
+        };
+    }
+
     public move(x: number, y: number) {
         this.sprite.x += x;
         this.sprite.y += y;

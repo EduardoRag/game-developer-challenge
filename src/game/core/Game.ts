@@ -1,8 +1,10 @@
-import { Application, Assets } from 'pixi.js';
+import { Application, Assets, Texture } from 'pixi.js';
 import { WorldRenderer } from '../rendering/WorldRenderer';
 
 
 import { Player } from '../entities/Player';
+import { Projectile } from '../entities/Projectile';
+
 import { InputManager } from '../input/InputManager';
 
 export class Game {
@@ -13,6 +15,8 @@ export class Game {
     private readonly input = new InputManager();
 
     private player: Player | null = null;
+    private projectileTexture: Texture | null = null;
+    private readonly projectiles: Projectile[] = [];
 
     private initialized = false;
     private destroyed = false;
@@ -50,6 +54,14 @@ export class Game {
         this.app.stage.addChild(this.world.container);
 
         await this.createPlayer();
+
+        if (this.destroyed) {
+            return;
+        }
+
+        this.projectileTexture = await Assets.load(
+            '/assets/png/default/ship_parts/cannon_ball.png',
+        );
 
         if (this.destroyed) {
             return;
@@ -109,6 +121,72 @@ export class Game {
             this.app.screen.width,
             this.app.screen.height,
         );
+
+        if (this.input.wasPressed('Space')) {
+            this.fireFrontCannon();
+        }
+
+        for (let index = this.projectiles.length - 1; index >= 0; index--) {
+            const projectile = this.projectiles[index];
+
+            projectile.update(deltaTime);
+
+            if (
+                this.isProjectileOutsideArena(projectile) ||
+                this.isProjectileCollidingWithObstacle(projectile)
+            ) {
+                this.app.stage.removeChild(projectile.sprite);
+                projectile.sprite.destroy();
+
+                this.projectiles.splice(index, 1);
+            }
+        }
+
+        this.input.clearFrameState();
+    }
+
+    private fireFrontCannon() {
+        if (!this.player || !this.projectileTexture) {
+            return;
+        }
+
+        const position = this.player.getFrontPosition();
+        const direction = this.player.getForwardDirection();
+
+        const projectile = new Projectile(
+            this.projectileTexture,
+            direction.x,
+            direction.y,
+        );
+
+        projectile.sprite.position.set(position.x, position.y);
+
+        this.projectiles.push(projectile);
+        this.app.stage.addChild(projectile.sprite);
+    }
+
+    private isProjectileOutsideArena(projectile: Projectile) {
+        const { x, y } = projectile.sprite;
+
+        return (
+            x < 0 ||
+            x > this.app.screen.width ||
+            y < 0 ||
+            y > this.app.screen.height
+        );
+    }
+
+    private isProjectileCollidingWithObstacle(projectile: Projectile) {
+        const projectileBounds = projectile.sprite.getBounds();
+
+        return this.world.obstacles.some((obstacle) => {
+            return (
+                projectileBounds.x < obstacle.x + obstacle.width &&
+                projectileBounds.x + projectileBounds.width > obstacle.x &&
+                projectileBounds.y < obstacle.y + obstacle.height &&
+                projectileBounds.y + projectileBounds.height > obstacle.y
+            );
+        });
     }
 
     private isPlayerCollidingWithObstacle() {
