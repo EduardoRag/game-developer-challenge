@@ -14,9 +14,11 @@ import { Player } from '../entities/Player';
 import { GAME_CONFIG } from '../config/gameConfig';
 
 import type { EnemyType } from '../entities/Enemy';
+import type { GameSessionConfig } from '../types/GameSessionConfig';
 import type { GameSnapshot, GameState } from '../types/GameSnapshot';
 
 import { InputManager } from '../input/InputManager';
+
 
 export class Game {
     private readonly app: Application;
@@ -26,14 +28,14 @@ export class Game {
     private onSnapshotChange?: (snapshot: GameSnapshot) => void;
 
     private score = 0;
-    private timeRemaining: number = GAME_CONFIG.session.duration;
+    private timeRemaining: number;
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
     private readonly collisionSystem = new CollisionSystem();
     private readonly weaponSystem = new WeaponSystem();
     private readonly enemySystem = new EnemySystem();
-    private readonly spawnSystem = new SpawnSystem();
+    private readonly spawnSystem: SpawnSystem;
     private readonly playerSystem = new PlayerSystem();
     private readonly combatSystem = new CombatSystem();
     private readonly projectileSystem = new ProjectileSystem();
@@ -47,8 +49,17 @@ export class Game {
     private initialized = false;
     private destroyed = false;
 
-    constructor(container: HTMLDivElement) {
+    constructor(
+        container: HTMLDivElement,
+        config: GameSessionConfig,
+    ) {
         this.container = container;
+        this.timeRemaining = config.sessionDuration;
+
+        this.spawnSystem = new SpawnSystem(
+            config.enemySpawnInterval,
+        );
+
         this.app = new Application();
     }
 
@@ -216,12 +227,15 @@ export class Game {
             deltaTime,
         );
 
-        this.combatSystem.resolveChaserContacts(
+        const collidedChasers = this.combatSystem.resolveChaserContacts(
             enemies,
             this.player,
             this.collisionSystem,
-            deltaTime,
         );
+
+        for (const chaser of collidedChasers) {
+            this.enemySystem.destroyEnemy(chaser);
+        }
 
         if (!this.projectileTexture) {
             return;
@@ -264,12 +278,10 @@ export class Game {
     }
 
     private destroyDeadEnemies() {
-        const destroyedEnemyTypes =
+        const destroyedCount =
             this.enemySystem.destroyDeadEnemies();
 
-        for (const enemyType of destroyedEnemyTypes) {
-            this.score += GAME_CONFIG.enemy[enemyType].score;
-        }
+        this.score += destroyedCount;
     }
 
     private async createPlayer() {

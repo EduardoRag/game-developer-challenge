@@ -35,6 +35,7 @@ const App = () => {
   const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
 
   const [gameOptions, setGameOptions] = useState<GameOptions>(() => loadGameOptions());
+  const [sessionConfig, setSessionConfig] = useState<GameOptions>(() => loadGameOptions());
 
   const handleSnapshotChange = useCallback(
     (nextSnapshot: GameSnapshot) => {
@@ -42,8 +43,15 @@ const App = () => {
     },
     [],
   );
+
   const handlePlay = () => {
-    setSnapshot(INITIAL_SNAPSHOT);
+    setSessionConfig({ ...gameOptions });
+
+    setSnapshot({
+      ...INITIAL_SNAPSHOT,
+      timeRemaining: gameOptions.sessionDuration,
+    });
+
     setGameKey((currentKey) => currentKey + 1);
     setScreen('game');
   };
@@ -58,13 +66,20 @@ const App = () => {
 
   const handleRestart = () => {
     createSessionMutation.reset();
-    setSnapshot(INITIAL_SNAPSHOT);
+
+    setSnapshot({
+      ...INITIAL_SNAPSHOT,
+      timeRemaining: sessionConfig.sessionDuration,
+    });
+
     setGameKey((currentKey) => currentKey + 1);
   };
 
   const handleMainMenu = () => {
     setSnapshot(INITIAL_SNAPSHOT);
+
     createSessionMutation.reset();
+
     setScreen('menu');
   };
 
@@ -118,6 +133,7 @@ const App = () => {
     <>
       <GameCanvas
         key={gameKey}
+        config={sessionConfig}
         onSnapshotChange={handleSnapshotChange}
       />
 

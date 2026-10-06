@@ -23,8 +23,6 @@ export const GAME_CONFIG = {
             maxHealth: 50,
             moveSpeed: 100,
             contactDamage: 20,
-            contactDamageCooldown: 1,
-            score: 100,
         },
 
         shooter: {
@@ -34,7 +32,6 @@ export const GAME_CONFIG = {
             preferredDistance: 300,
             fireRange: 400,
             fireCooldown: 1.5,
-            score: 150,
         },
     },
 

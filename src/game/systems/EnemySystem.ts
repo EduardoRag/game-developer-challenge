@@ -271,34 +271,39 @@ export class EnemySystem {
         return shootersReadyToFire;
     }
 
-    public destroyDeadEnemies() {
-        const destroyedEnemyTypes: EnemyType[] = [];
+    public destroyEnemy(enemy: Enemy) {
+        const index = this.enemies.indexOf(enemy);
 
-        for (
-            let index = this.enemies.length - 1;
-            index >= 0;
-            index--
-        ) {
+        if (index === -1) {
+            return;
+        }
+
+        const healthBar = this.healthBars.get(enemy);
+
+        healthBar?.destroy();
+        this.healthBars.delete(enemy);
+
+        enemy.sprite.removeFromParent();
+        enemy.sprite.destroy();
+
+        this.enemies.splice(index, 1);
+    }
+
+    public destroyDeadEnemies() {
+        let destroyedCount = 0;
+
+        for (let index = this.enemies.length - 1; index >= 0; index--) {
             const enemy = this.enemies[index];
 
             if (!enemy.isDead()) {
                 continue;
             }
 
-            destroyedEnemyTypes.push(enemy.type);
-
-            const healthBar = this.healthBars.get(enemy);
-
-            healthBar?.destroy();
-            this.healthBars.delete(enemy);
-
-            enemy.sprite.removeFromParent();
-            enemy.sprite.destroy();
-
-            this.enemies.splice(index, 1);
+            this.destroyEnemy(enemy);
+            destroyedCount++;
         }
 
-        return destroyedEnemyTypes;
+        return destroyedCount;
     }
 
     public fireShooters(

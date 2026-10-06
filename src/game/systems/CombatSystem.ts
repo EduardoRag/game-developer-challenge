@@ -59,46 +59,46 @@ export class CombatSystem {
         enemy: Enemy,
         player: Player,
         collisionSystem: CollisionSystem,
-        deltaTime: number,
     ) {
-        enemy.updateContactDamageCooldown(deltaTime);
-
         if (
             !collisionSystem.isEnemyCollidingWithPlayer(
                 enemy,
                 player,
-            ) ||
-            !enemy.canDealContactDamage()
+            )
         ) {
-            return;
+            return false;
         }
 
         player.takeDamage(
             GAME_CONFIG.enemy.chaser.contactDamage,
         );
 
-        enemy.startContactDamageCooldown(
-            GAME_CONFIG.enemy.chaser.contactDamageCooldown,
-        );
+        return true;
     }
 
     public resolveChaserContacts(
         enemies: Enemy[],
         player: Player,
         collisionSystem: CollisionSystem,
-        deltaTime: number,
     ) {
+        const collidedChasers: Enemy[] = [];
+
         for (const enemy of enemies) {
             if (enemy.type !== 'chaser') {
                 continue;
             }
 
-            this.resolveChaserContactDamage(
+            const collided = this.resolveChaserContactDamage(
                 enemy,
                 player,
                 collisionSystem,
-                deltaTime,
             );
+
+            if (collided) {
+                collidedChasers.push(enemy);
+            }
         }
+
+        return collidedChasers;
     }
 }

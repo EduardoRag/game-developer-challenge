@@ -1,5 +1,3 @@
-import { GAME_CONFIG } from '../config/gameConfig';
-
 type Position = {
     x: number;
     y: number;
@@ -13,8 +11,14 @@ type Obstacle = {
 };
 
 export class SpawnSystem {
-    private enemySpawnCooldown: number = GAME_CONFIG.enemy.spawn.interval;
+    private readonly enemySpawnInterval: number;
+    private enemySpawnCooldown: number;
     private spawningEnemy = false;
+
+    constructor(enemySpawnInterval: number) {
+        this.enemySpawnInterval = enemySpawnInterval;
+        this.enemySpawnCooldown = enemySpawnInterval;
+    }
 
     public isPositionSafeFromPlayer(
         position: Position,
@@ -93,7 +97,7 @@ export class SpawnSystem {
     }
 
     public resetEnemySpawnCooldown() {
-        this.enemySpawnCooldown = GAME_CONFIG.enemy.spawn.interval;
+        this.enemySpawnCooldown = this.enemySpawnInterval;
     }
 
     public isSpawningEnemy() {

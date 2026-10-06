@@ -9,7 +9,6 @@ export class Enemy {
 
     private health: number;
     private fireCooldown = 0;
-    private contactDamageCooldown = 0;
 
     constructor(texture: Texture, type: EnemyType) {
         this.sprite = new Sprite(texture);
@@ -90,20 +89,5 @@ export class Enemy {
 
     public startFireCooldown(duration: number) {
         this.fireCooldown = duration;
-    }
-
-    public updateContactDamageCooldown(deltaTime: number) {
-        this.contactDamageCooldown = Math.max(
-            0,
-            this.contactDamageCooldown - deltaTime,
-        );
-    }
-
-    public canDealContactDamage() {
-        return this.contactDamageCooldown <= 0;
-    }
-
-    public startContactDamageCooldown(duration: number) {
-        this.contactDamageCooldown = duration;
     }
 }
