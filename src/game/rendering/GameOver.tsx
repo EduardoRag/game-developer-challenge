@@ -1,14 +1,34 @@
 import type { GameSnapshot } from '../types/GameSnapshot';
 
+import { GAME_CONFIG } from '../config/gameConfig';
+
 type GameOverProps = {
     snapshot: GameSnapshot;
     onRestart: () => void;
+    onMainMenu: () => void;
 };
 
 export const GameOver = ({
     snapshot,
     onRestart,
+    onMainMenu,
 }: GameOverProps) => {
+    const elapsedTime = GAME_CONFIG.session.duration - snapshot.timeRemaining;
+
+    const minutes = Math.floor(elapsedTime / 60);
+    const seconds = elapsedTime % 60;
+
+    const formattedTime = `${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds
+            .toString()
+            .padStart(2, '0')}`;
+
+    const resultReason =
+        snapshot.timeRemaining <= 0
+            ? 'TIME UP'
+            : 'SHIP DESTROYED';
+
     return (
         <div
             className="game-over"
@@ -23,19 +43,35 @@ export const GameOver = ({
                 />
 
                 <div className="game-over__content">
-                    <h1 id="game-over-title">Game Over</h1>
+                    <h1 id="game-over-title">
+                        BATTLE COMPLETE
+                    </h1>
 
-                    <p className="game-over__score">
-                        Score: {snapshot.score}
+                    <strong className="game-over__score">
+                        {snapshot.score}
+                    </strong>
+
+                    <p className="game-over__summary">
+                        POINTS · {formattedTime} · {resultReason}
                     </p>
 
-                    <button
-                        className="game-over__restart"
-                        type="button"
-                        onClick={onRestart}
-                    >
-                        <span>Play Again</span>
-                    </button>
+                    <div className="game-over__actions">
+                        <button
+                            type="button"
+                            className="menu-button"
+                            onClick={onRestart}
+                        >
+                            PLAY AGAIN
+                        </button>
+
+                        <button
+                            type="button"
+                            className="menu-button"
+                            onClick={onMainMenu}
+                        >
+                            MAIN MENU
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

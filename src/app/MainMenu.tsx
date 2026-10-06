@@ -1,4 +1,4 @@
-import { MenuPanel } from '../shared/components/MenuPanel';
+import { MenuPanel } from "../shared/components/MenuPanel";
 
 type MainMenuProps = {
     onPlay: () => void;
@@ -12,7 +12,7 @@ export const MainMenu = ({
     onHistory,
 }: MainMenuProps) => {
     return (
-        <MenuPanel className="main-menu__content">
+        <MenuPanel>
             <img
                 className="main-menu__title"
                 src="/assets/png/default/ui/menu/title_pirate_battle.png"

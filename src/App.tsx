@@ -14,6 +14,8 @@ import { RankingScreen } from './features/ranking/RankingScreen';
 
 import { HistoryScreen } from './features/history/HistoryScreen';
 
+import { useCreateSessionMutation } from './infrastructure/api/sessionMutations';
+
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
   maxHealth: 100,
@@ -23,6 +25,7 @@ const INITIAL_SNAPSHOT: GameSnapshot = {
 };
 
 const App = () => {
+  const createSessionMutation = useCreateSessionMutation();
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [gameKey, setGameKey] = useState(0);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
@@ -48,8 +51,15 @@ const App = () => {
   };
 
   const handleRestart = () => {
+    createSessionMutation.reset();
     setSnapshot(INITIAL_SNAPSHOT);
     setGameKey((currentKey) => currentKey + 1);
+  };
+
+  const handleMainMenu = () => {
+    setSnapshot(INITIAL_SNAPSHOT);
+    createSessionMutation.reset();
+    setScreen('menu');
   };
 
   if (screen === 'menu') {
@@ -91,6 +101,7 @@ const App = () => {
         <GameOver
           snapshot={snapshot}
           onRestart={handleRestart}
+          onMainMenu={handleMainMenu}
         />
       )}
     </>
