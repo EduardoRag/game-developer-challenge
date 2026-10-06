@@ -93,7 +93,6 @@ const App = () => {
 
   const handleSaveOptions = (options: GameOptions) => {
     setGameOptions(options);
-    setScreen('menu');
   };
 
   const handleGameReady = useCallback((resume: () => void) => {
@@ -151,6 +150,7 @@ const App = () => {
       {snapshot.gameState === 'paused' && (
         <PauseOverlay
           onResume={() => resumeGameRef.current?.()}
+          onMainMenu={handleMainMenu}
         />
       )}
 

@@ -1,12 +1,13 @@
-import { useState } from 'react';
 import { MenuPanel } from '../../shared/components/MenuPanel';
 import {
-    DEFAULT_GAME_OPTIONS,
     GAME_OPTIONS_LIMITS,
     saveGameOptions,
 } from './optionsStorage';
 
 import type { GameOptions } from './types';
+
+import { MinusButton } from '../../shared/components/MinusButton';
+import { PlusButton } from '../../shared/components/PlusButton';
 
 type OptionsScreenProps = {
     options: GameOptions;
@@ -19,136 +20,137 @@ export const OptionsScreen = ({
     onSave,
     onBack,
 }: OptionsScreenProps) => {
-    const [sessionDuration, setSessionDuration] = useState(
-        options.sessionDuration,
-    );
-    const [enemySpawnInterval, setEnemySpawnInterval] = useState(
-        options.enemySpawnInterval,
-    );
-
-    const isSessionDurationValid =
-        sessionDuration >= GAME_OPTIONS_LIMITS.sessionDuration.min &&
-        sessionDuration <= GAME_OPTIONS_LIMITS.sessionDuration.max;
-
-    const isSpawnIntervalValid =
-        enemySpawnInterval >=
-        GAME_OPTIONS_LIMITS.enemySpawnInterval.min &&
-        enemySpawnInterval <=
-        GAME_OPTIONS_LIMITS.enemySpawnInterval.max;
-
-    const isValid =
-        isSessionDurationValid && isSpawnIntervalValid;
-
-    const handleSave = () => {
-        if (!isValid) {
-            return;
-        }
-
-        const nextOptions: GameOptions = {
-            sessionDuration,
-            enemySpawnInterval,
-        };
-
+    const updateOptions = (nextOptions: GameOptions) => {
         saveGameOptions(nextOptions);
         onSave(nextOptions);
     };
 
-    const handleReset = () => {
-        setSessionDuration(
-            DEFAULT_GAME_OPTIONS.sessionDuration,
+    const decreaseSessionDuration = () => {
+        const nextValue = Math.max(
+            GAME_OPTIONS_LIMITS.sessionDuration.min,
+            options.sessionDuration - 10,
         );
-        setEnemySpawnInterval(
-            DEFAULT_GAME_OPTIONS.enemySpawnInterval,
+
+        updateOptions({
+            ...options,
+            sessionDuration: nextValue,
+        });
+    };
+
+    const increaseSessionDuration = () => {
+        const nextValue = Math.min(
+            GAME_OPTIONS_LIMITS.sessionDuration.max,
+            options.sessionDuration + 10,
         );
+
+        updateOptions({
+            ...options,
+            sessionDuration: nextValue,
+        });
+    };
+
+    const decreaseEnemySpawnInterval = () => {
+        const nextValue = Math.max(
+            GAME_OPTIONS_LIMITS.enemySpawnInterval.min,
+            options.enemySpawnInterval - 1,
+        );
+
+        updateOptions({
+            ...options,
+            enemySpawnInterval: nextValue,
+        });
+    };
+
+    const increaseEnemySpawnInterval = () => {
+        const nextValue = Math.min(
+            GAME_OPTIONS_LIMITS.enemySpawnInterval.max,
+            options.enemySpawnInterval + 1,
+        );
+
+        updateOptions({
+            ...options,
+            enemySpawnInterval: nextValue,
+        });
     };
 
     return (
-        <MenuPanel className="options-screen">
-            <h1>OPTIONS</h1>
+        <MenuPanel
+            className="options-screen"
+            panelClassName="options-screen__panel"
+        >
+            <h1 className="options-screen__title">
+                OPTIONS
+            </h1>
 
-            <div className="options-screen__fields">
-                <label className="options-screen__field">
-                    <span>GAME SESSION TIME</span>
+            <div className="options-screen__settings">
+                <div className="options-screen__setting">
+                    <span className="options-screen__label">
+                        Game session time
+                    </span>
 
-                    <div className="options-screen__input">
-                        <input
-                            type="number"
-                            min={60}
-                            max={180}
-                            step={10}
-                            value={sessionDuration}
-                            onChange={(event) =>
-                                setSessionDuration(
-                                    Number(event.target.value),
-                                )
+                    <div className="options-screen__control">
+                        <MinusButton
+                            onClick={decreaseSessionDuration}
+                            disabled={
+                                options.sessionDuration <=
+                                GAME_OPTIONS_LIMITS.sessionDuration.min
                             }
+                            ariaLabel="Decrease game session time"
                         />
 
-                        <span>SEC</span>
-                    </div>
+                        <span className="options-screen__value">
+                            {options.sessionDuration} s
+                        </span>
 
-                    <small>60 – 180 seconds</small>
-                </label>
-
-                <label className="options-screen__field">
-                    <span>ENEMY SPAWN TIME</span>
-
-                    <div className="options-screen__input">
-                        <input
-                            type="number"
-                            min={2}
-                            max={15}
-                            step={1}
-                            value={enemySpawnInterval}
-                            onChange={(event) =>
-                                setEnemySpawnInterval(
-                                    Number(event.target.value),
-                                )
+                        <PlusButton
+                            onClick={increaseSessionDuration}
+                            disabled={
+                                options.sessionDuration >=
+                                GAME_OPTIONS_LIMITS.sessionDuration.max
                             }
+                            ariaLabel="Increase game session time"
+                        />
+                    </div>
+                </div>
+
+                <div className="options-screen__setting">
+                    <span className="options-screen__label">
+                        Enemy spawn time
+                    </span>
+
+                    <div className="options-screen__control">
+                        <MinusButton
+                            onClick={decreaseEnemySpawnInterval}
+                            disabled={
+                                options.enemySpawnInterval <=
+                                GAME_OPTIONS_LIMITS.enemySpawnInterval.min
+                            }
+                            ariaLabel="Decrease enemy spawn time"
                         />
 
-                        <span>SEC</span>
+                        <span className="options-screen__value">
+                            {options.enemySpawnInterval} s
+                        </span>
+
+                        <PlusButton
+                            onClick={increaseEnemySpawnInterval}
+                            disabled={
+                                options.enemySpawnInterval >=
+                                GAME_OPTIONS_LIMITS.enemySpawnInterval.max
+                            }
+                            ariaLabel="Increase enemy spawn time"
+                        />
                     </div>
-
-                    <small>2 – 15 seconds</small>
-                </label>
+                </div>
             </div>
 
-            {!isValid && (
-                <p
-                    className="options-screen__error"
-                    role="alert"
-                >
-                    Enter values within the allowed ranges.
-                </p>
-            )}
-
-            <div className="options-screen__actions">
-                <button
-                    type="button"
-                    className="menu-button"
-                    disabled={!isValid}
-                    onClick={handleSave}
-                >
-                    SAVE
-                </button>
-
-                <button
-                    type="button"
-                    className="options-screen__text-button"
-                    onClick={handleReset}
-                >
-                    RESET DEFAULTS
-                </button>
-
-                <button
-                    type="button"
-                    className="options-screen__text-button"
-                    onClick={onBack}
-                >
-                    BACK
-                </button>
-            </div>
+            <button
+                type="button"
+                className="menu-button options-screen__back"
+                onClick={onBack}
+            >
+                MAIN MENU
+            </button>
         </MenuPanel>
     );
 };

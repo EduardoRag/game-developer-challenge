@@ -471,99 +471,179 @@ body {
 
 /* Options */
 
+.options-screen__panel {
+  width: min(690px, calc(100vw - 48px));
+  aspect-ratio: 1 / 0.88;
+}
+
 .options-screen {
-  gap: 16px;
-}
-
-.options-screen h1 {
-  margin: 18px 0 8px;
-  font-family: var(--font-game);
-  font-size: 32px;
-  font-weight: 900;
-  color: var(--game-text);
-  text-shadow: 2px 2px 3px rgb(0 0 0 / 60%);
-}
-
-.options-screen__fields {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  align-items: center;
+}
+
+.options-screen__title {
+  margin: 8% 0 0;
+
+  font-family: var(--font-game);
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 900;
+  line-height: 1;
+
+  color: var(--game-text);
+
+  text-shadow:
+    0 3px 0 rgb(60 45 45 / 45%),
+    0 4px 5px rgb(0 0 0 / 45%);
+}
+
+/* Settings */
+
+.options-screen__settings {
   width: 100%;
+  margin-top: 7%;
+
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 }
 
-.options-screen__field {
+.options-screen__setting {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
+}
+
+.options-screen__label {
   font-family: var(--font-game);
+  font-size: clamp(14px, 2vw, 18px);
   font-weight: 900;
+
   color: var(--game-text);
-  text-align: center;
-  text-shadow: 1px 1px 2px rgb(0 0 0 / 60%);
+
+  text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
 }
 
-.options-screen__input {
-  display: flex;
+/* - value + */
+
+.options-screen__control {
+  width: min(290px, 80%);
+
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
   align-items: center;
-  gap: 8px;
+  gap: 18px;
 }
 
-.options-screen__input input {
-  width: 100px;
-  padding: 8px;
-  border: 2px solid #6d452b;
-  border-radius: 6px;
-  background: #fff4d6;
+.options-screen__value {
+  text-align: center;
+
   font-family: var(--font-game);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--game-button-text);
-  text-align: center;
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 900;
+
+  color: var(--game-text);
+
+  text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
 }
 
-.options-screen__input input:focus-visible {
-  outline: 3px solid white;
-  outline-offset: 2px;
-}
+/* Round icon buttons */
 
-.options-screen__field small {
-  font-size: 11px;
-  font-weight: 700;
-}
+.round-icon-button {
+  width: 48px;
+  height: 48px;
 
-.options-screen__error {
-  margin: 0;
-  font-size: 12px;
-}
-
-.options-screen__actions {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  margin-top: auto;
-}
+  justify-content: center;
 
-.options-screen__actions .menu-button {
-  transform: scale(0.8);
-}
-
-.options-screen__text-button {
+  padding: 0;
   border: 0;
-  padding: 5px 10px;
-  background: transparent;
+
+  background:
+    url('/assets/png/default/ui/controls/button_round_normal.png') center / contain no-repeat;
+
   cursor: pointer;
-  font-family: var(--font-game);
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--game-text);
-  text-decoration: underline;
-  text-shadow: 1px 1px 2px black;
+
+  transition: transform 120ms ease;
 }
 
-.options-screen__text-button:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 2px;
+.round-icon-button img {
+  width: 20px;
+  height: 20px;
+
+  display: block;
+  object-fit: contain;
+
+  pointer-events: none;
+}
+
+.round-icon-button:hover:not(:disabled) {
+  transform: scale(1.08);
+}
+
+.round-icon-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.round-icon-button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.round-icon-button:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+/* Main Menu */
+
+.options-screen__back {
+  margin-top: auto;
+  margin-bottom: 8%;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .options-screen__panel {
+    width: min(560px, calc(100vw - 24px));
+  }
+
+  .options-screen__title {
+    margin-top: 6%;
+  }
+
+  .options-screen__settings {
+    margin-top: 6%;
+    gap: 18px;
+  }
+
+  .options-screen__setting {
+    gap: 8px;
+  }
+
+  .options-screen__control {
+    grid-template-columns: 42px 1fr 42px;
+    gap: 12px;
+  }
+
+  .round-icon-button {
+    width: 42px;
+    height: 42px;
+  }
+
+  .round-icon-button img {
+    width: 18px;
+    height: 18px;
+  }
+
+  .options-screen__back {
+    margin-bottom: 5%;
+  }
 }
 
 /* Pause */
@@ -572,49 +652,105 @@ body {
   position: fixed;
   inset: 0;
   z-index: 30;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgb(0 0 0 / 45%);
+
+  padding: 24px;
+
+  background: rgb(5 15 30 / 48%);
 }
 
-.pause-overlay__panel {
+.pause-menu {
   position: relative;
-  width: min(384px, calc(100vw - 32px));
-  aspect-ratio: 384 / 480;
+
+  width: min(690px, calc(100vw - 48px));
+  aspect-ratio: 1 / 0.88;
+
+  filter: drop-shadow(0 12px 20px rgb(0 0 0 / 35%));
 }
 
-.pause-overlay__background {
+.pause-menu__panel {
   position: absolute;
   inset: 0;
+
   width: 100%;
   height: 100%;
+
+  pointer-events: none;
 }
 
-.pause-overlay__content {
+.pause-menu__content {
   position: absolute;
-  inset: 30px 26px;
+  inset: 15% 14% 13%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pause-menu__title {
+  margin: 0;
+
+  font-family: var(--font-game);
+  font-size: clamp(30px, 5vw, 42px);
+  line-height: 1;
+
+  color: var(--game-text);
+
+  text-shadow:
+    0 3px 0 rgb(60 45 45 / 45%),
+    0 4px 5px rgb(0 0 0 / 45%);
+}
+
+.pause-menu__subtitle {
+  margin: 28px 0 0;
+
+  font-family: var(--font-game);
+  font-size: clamp(14px, 2vw, 18px);
+  font-weight: 700;
+
+  color: var(--game-text);
+
+  text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
+}
+
+.pause-menu__actions {
+  flex: 1;
+
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  text-align: center;
+
+  gap: 8px;
 }
 
-.pause-overlay__content h1 {
-  margin: 0 0 8px;
-  font-family: var(--font-game);
-  font-size: 34px;
-  color: var(--game-text);
-  text-shadow: 2px 2px 3px rgb(0 0 0 / 60%);
+.pause-menu__actions .menu-button {
+  flex-shrink: 0;
 }
 
-.pause-overlay__content p {
-  margin: 0 0 24px;
-  font-family: var(--font-game);
-  font-weight: 700;
-  color: var(--game-text);
-  text-shadow: 1px 1px 2px rgb(0 0 0 / 60%);
+@media (max-width: 640px) {
+  .pause-overlay {
+    padding: 12px;
+  }
+
+  .pause-menu {
+    width: min(560px, calc(100vw - 24px));
+  }
+
+  .pause-menu__content {
+    inset: 13% 12% 11%;
+  }
+
+  .pause-menu__subtitle {
+    margin-top: 16px;
+  }
+
+  .pause-menu__actions {
+    gap: 4px;
+  }
 }
 
 /* Responsive */

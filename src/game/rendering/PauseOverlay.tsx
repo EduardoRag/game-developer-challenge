@@ -1,9 +1,11 @@
 type PauseOverlayProps = {
     onResume: () => void;
+    onMainMenu: () => void;
 };
 
 export const PauseOverlay = ({
     onResume,
+    onMainMenu,
 }: PauseOverlayProps) => {
     return (
         <div
@@ -12,25 +14,50 @@ export const PauseOverlay = ({
             aria-modal="true"
             aria-labelledby="pause-title"
         >
-            <div className="pause-overlay__panel">
+            <div className="pause-menu">
                 <img
-                    className="pause-overlay__background"
+                    className="pause-menu__panel"
                     src="/assets/png/default/ui/menu/panel_menu.png"
                     alt=""
                 />
 
-                <div className="pause-overlay__content">
-                    <h1 id="pause-title">PAUSED</h1>
-
-                    <p>The battle is waiting for you.</p>
-
-                    <button
-                        type="button"
-                        className="menu-button"
-                        onClick={onResume}
+                <div className="pause-menu__content">
+                    <h1
+                        id="pause-title"
+                        className="pause-menu__title"
                     >
-                        RESUME
-                    </button>
+                        PAUSED
+                    </h1>
+
+                    <p className="pause-menu__subtitle">
+                        Ready when you are.
+                    </p>
+
+                    <div className="pause-menu__actions">
+                        <button
+                            type="button"
+                            className="menu-button"
+                            onClick={onResume}
+                        >
+                            RESUME
+                        </button>
+
+                        <button
+                            type="button"
+                            className="menu-button"
+                            aria-disabled="true"
+                        >
+                            OPTIONS
+                        </button>
+
+                        <button
+                            type="button"
+                            className="menu-button"
+                            onClick={onMainMenu}
+                        >
+                            MAIN MENU
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
