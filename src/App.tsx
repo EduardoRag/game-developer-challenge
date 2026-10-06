@@ -15,6 +15,7 @@ import { RankingScreen } from './features/ranking/RankingScreen';
 import { HistoryScreen } from './features/history/HistoryScreen';
 
 import { useCreateSessionMutation } from './infrastructure/api/sessionMutations';
+import { MenuPanel } from './shared/components/MenuPanel';
 
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
@@ -62,10 +63,15 @@ const App = () => {
     setScreen('menu');
   };
 
+  const handleOptions = () => {
+    setScreen('options');
+  };
+
   if (screen === 'menu') {
     return (
       <MainMenu
         onPlay={handlePlay}
+        onOptions={handleOptions}
         onRanking={handleRanking}
         onHistory={handleHistory}
       />
@@ -85,6 +91,24 @@ const App = () => {
       <HistoryScreen
         onBack={() => setScreen('menu')}
       />
+    );
+  }
+
+  if (screen === 'options') {
+    return (
+      <MenuPanel>
+        <div className="data-screen__content">
+          <h1>OPTIONS</h1>
+
+          <button
+            type="button"
+            className="menu-button data-screen__back"
+            onClick={() => setScreen('menu')}
+          >
+            BACK
+          </button>
+        </div>
+      </MenuPanel>
     );
   }
 

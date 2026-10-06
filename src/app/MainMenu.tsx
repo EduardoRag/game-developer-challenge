@@ -1,50 +1,75 @@
-import { MenuPanel } from "../shared/components/MenuPanel";
+import { MenuPanel } from '../shared/components/MenuPanel';
 
 type MainMenuProps = {
     onPlay: () => void;
+    onOptions: () => void;
     onRanking: () => void;
     onHistory: () => void;
 };
 
 export const MainMenu = ({
     onPlay,
+    onOptions,
     onRanking,
     onHistory,
 }: MainMenuProps) => {
     return (
-        <MenuPanel>
+        <MenuPanel
+            panelClassName="main-menu__panel"
+            className="main-menu__content"
+        >
             <img
                 className="main-menu__title"
                 src="/assets/png/default/ui/menu/title_pirate_battle.png"
                 alt="Pirate Battle"
             />
 
-            <nav
-                className="main-menu__actions"
-                aria-label="Main menu"
-            >
+            <p className="main-menu__subtitle">
+                SET SAIL. TAKE COMMAND.
+            </p>
+
+            <div className="main-menu__primary-actions">
                 <button
                     type="button"
                     className="menu-button"
                     onClick={onPlay}
                 >
-                    Play
+                    PLAY
                 </button>
 
                 <button
                     type="button"
                     className="menu-button"
+                    onClick={onOptions}
+                >
+                    OPTIONS
+                </button>
+            </div>
+
+            <div className="main-menu__spacer" />
+
+            <p className="main-menu__hint">
+                Navigate the islands. Survive the battle.
+            </p>
+
+            <nav
+                className="main-menu__secondary-actions"
+                aria-label="Game records"
+            >
+                <button
+                    type="button"
+                    className="menu-button main-menu__secondary-button"
                     onClick={onRanking}
                 >
-                    Ranking
+                    RANKING
                 </button>
 
                 <button
                     type="button"
-                    className="menu-button"
+                    className="menu-button main-menu__secondary-button"
                     onClick={onHistory}
                 >
-                    History
+                    MATCH HISTORY
                 </button>
             </nav>
         </MenuPanel>

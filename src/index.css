@@ -251,19 +251,63 @@ body {
 
 /* Main menu */
 
-.main-menu__title {
-  width: 100%;
-  max-width: 320px;
-  height: auto;
-  margin-bottom: 28px;
+.main-menu__panel {
+  width: min(700px, calc(100vw - 48px));
+  aspect-ratio: 1 / 0.92;
 }
 
-.main-menu__actions {
+.main-menu__content {
+  inset: 8% 10%;
+}
+
+.main-menu__title {
+  width: min(420px, 80%);
+  height: auto;
+  margin: 0;
+}
+
+.main-menu__subtitle {
+  margin: 10px 0 14px;
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: var(--game-text);
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 60%);
+}
+
+.main-menu__primary-actions {
   display: flex;
-  flex: 1;
   flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.main-menu__spacer {
+  flex: 1;
+}
+
+.main-menu__hint {
+  margin: 6px 0 12px;
+  font-family: var(--font-game);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--game-text);
+  text-align: center;
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 60%);
+}
+
+.main-menu__secondary-actions {
+  display: flex;
+  align-items: center;
   justify-content: center;
   gap: 12px;
+}
+
+.main-menu__secondary-button {
+  width: 200px;
+  height: 68px;
+  font-size: 15px;
 }
 
 /* Ranking and history */
@@ -460,5 +504,23 @@ body {
 
   .game-over__content h1 {
     margin-top: 50px;
+  }
+
+  .main-menu__panel {
+    width: calc(100vw - 24px);
+  }
+
+  .main-menu__content {
+    inset: 7% 8%;
+  }
+
+  .main-menu__title {
+    width: min(360px, 85%);
+  }
+
+  .main-menu__secondary-button {
+    width: 170px;
+    height: 60px;
+    font-size: 13px;
   }
 }
