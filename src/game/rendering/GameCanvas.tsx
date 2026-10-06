@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react';
 
 import { Game } from '../core/Game';
+import type { GameControlsApi } from '../types/GameControls';
 import type { GameSessionConfig } from '../types/GameSessionConfig';
 import type { GameSnapshot } from '../types/GameSnapshot';
 
 type GameCanvasProps = {
     config: GameSessionConfig;
     onSnapshotChange: (snapshot: GameSnapshot) => void;
-    onGameReady: (resume: () => void) => void;
+    onGameReady: (controls: GameControlsApi) => void;
 };
 
 export const GameCanvas = ({
@@ -28,7 +29,12 @@ export const GameCanvas = ({
 
         game.setSnapshotListener(onSnapshotChange);
 
-        onGameReady(() => game.resume());
+        onGameReady({
+            pause: () => game.pause(),
+            resume: () => game.resume(),
+            press: (key) => game.pressInput(key),
+            release: (key) => game.releaseInput(key),
+        });
 
         void game.initialize();
 

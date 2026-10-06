@@ -103,7 +103,7 @@ body {
 .score-counter {
   position: absolute;
   top: 24px;
-  right: 200px;
+  right: 264px;
   width: 160px;
   height: 56px;
 }
@@ -143,7 +143,7 @@ body {
 .time-counter {
   position: absolute;
   top: 24px;
-  right: 24px;
+  right: 88px;
   width: 160px;
   height: 56px;
 }
@@ -767,6 +767,165 @@ body {
   }
 }
 
+/* control buttons */
+
+.game-control-button {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: url('/assets/png/default/ui/controls/button_round_normal.png') center / contain no-repeat;
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.game-control-button:hover {
+  background-image: url('/assets/png/default/ui/controls/button_round_hover.png');
+}
+
+.game-control-button:active {
+  background-image: url('/assets/png/default/ui/controls/button_round_pressed.png');
+}
+
+.game-control-button img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.game-control-button:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 3px;
+  border-radius: 50%;
+}
+
+/* Game controls */
+
+.game-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+}
+
+.game-controls__pause,
+.game-controls__movement,
+.game-controls__attacks {
+  position: absolute;
+  pointer-events: auto;
+}
+
+.game-controls__pause {
+  top: 20px;
+  right: 16px;
+  left: auto;
+  bottom: auto;
+}
+
+/* Movement controls */
+
+.game-controls__movement {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  width: 220px;
+  height: 148px;
+}
+
+.game-controls__movement .game-control-button:nth-child(1) {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.game-controls__movement .game-control-button:nth-child(2) {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.game-controls__movement .game-control-button:nth-child(3) {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* Attack controls */
+
+.game-controls__attacks {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  width: 220px;
+  height: 148px;
+}
+
+.game-controls__attacks .game-control-button:nth-child(1) {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.game-controls__attacks .game-control-button:nth-child(2) {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.game-controls__attacks .game-control-button:nth-child(3) {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+}
+
+/* Mobile game controls */
+
+@media (max-width: 640px) {
+  .game-controls__pause {
+    top: 8px;
+    right: 8px;
+  }
+
+  .game-controls__movement {
+    left: 12px;
+    bottom: 12px;
+    width: 164px;
+    height: 112px;
+  }
+
+  .game-controls__attacks {
+    right: 12px;
+    bottom: 12px;
+    width: 164px;
+    height: 112px;
+  }
+
+  .game-control-button {
+    width: 52px;
+    height: 52px;
+  }
+
+  .game-control-button img {
+    width: 26px;
+    height: 26px;
+  }
+
+  .game-controls__movement .game-control-button:nth-child(2),
+  .game-controls__attacks .game-control-button:nth-child(2) {
+    top: 12px;
+  }
+}
+
 /* Responsive */
 
 @media (max-width: 640px) {
@@ -779,14 +938,14 @@ body {
 
   .score-counter {
     top: 12px;
-    right: 142px;
+    right: 174px;
     transform: scale(0.75);
     transform-origin: top right;
   }
 
   .time-counter {
     top: 12px;
-    right: 12px;
+    right: 50px;
     transform: scale(0.75);
     transform-origin: top right;
   }
@@ -820,5 +979,61 @@ body {
     width: 170px;
     height: 60px;
     font-size: 13px;
+  }
+}
+
+/* Mobile landscape */
+
+@media (orientation: landscape) and (max-height: 500px) {
+  /* Menus */
+
+  .main-menu__panel,
+  .pause-menu,
+  .game-over__panel {
+    transform: scale(0.72);
+    transform-origin: center;
+  }
+
+  /* HUD */
+
+  .player-health {
+    transform: scale(0.65);
+    transform-origin: top left;
+  }
+
+  .score-counter {
+    top: 8px;
+    right: 174px;
+    transform: scale(0.65);
+    transform-origin: top right;
+  }
+
+  .time-counter {
+    top: 8px;
+    right: 62px;
+    transform: scale(0.65);
+    transform-origin: top right;
+  }
+
+  /* Game controls */
+
+  .game-controls__movement,
+  .game-controls__attacks {
+    transform: scale(0.72);
+  }
+
+  .game-controls__movement {
+    transform-origin: bottom left;
+  }
+
+  .game-controls__attacks {
+    transform-origin: bottom right;
+  }
+
+  .game-controls__pause {
+    top: 8px;
+    right: 8px;
+    transform: scale(0.65);
+    transform-origin: top right;
   }
 }

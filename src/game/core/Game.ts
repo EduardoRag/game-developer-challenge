@@ -464,6 +464,18 @@ export class Game {
         this.emitSnapshot();
     }
 
+    public pressInput(key: string) {
+        if (this.gameState !== 'playing') {
+            return;
+        }
+
+        this.input.press(key);
+    }
+
+    public releaseInput(key: string) {
+        this.input.release(key);
+    }
+
     private readonly handleWindowBlur = () => {
         this.pause();
     };

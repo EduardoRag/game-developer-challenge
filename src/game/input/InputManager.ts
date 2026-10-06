@@ -11,28 +11,27 @@ export class InputManager {
         window.removeEventListener('keydown', this.handleKeyDown);
         window.removeEventListener('keyup', this.handleKeyUp);
 
-        this.pressedKeys.clear();
-        this.justPressedKeys.clear();
+        this.clear();
     }
 
     public isPressed(...keys: string[]) {
         return keys.some((key) => this.pressedKeys.has(key));
     }
 
-    private readonly handleKeyDown = (event: KeyboardEvent) => {
-        if (!this.pressedKeys.has(event.code)) {
-            this.justPressedKeys.add(event.code);
-        }
-
-        this.pressedKeys.add(event.code);
-    };
-
-    private readonly handleKeyUp = (event: KeyboardEvent) => {
-        this.pressedKeys.delete(event.code);
-    };
-
     public wasPressed(...keys: string[]) {
         return keys.some((key) => this.justPressedKeys.has(key));
+    }
+
+    public press(key: string) {
+        if (!this.pressedKeys.has(key)) {
+            this.justPressedKeys.add(key);
+        }
+
+        this.pressedKeys.add(key);
+    }
+
+    public release(key: string) {
+        this.pressedKeys.delete(key);
     }
 
     public clearFrameState() {
@@ -43,4 +42,12 @@ export class InputManager {
         this.pressedKeys.clear();
         this.justPressedKeys.clear();
     }
+
+    private readonly handleKeyDown = (event: KeyboardEvent) => {
+        this.press(event.code);
+    };
+
+    private readonly handleKeyUp = (event: KeyboardEvent) => {
+        this.release(event.code);
+    };
 }
