@@ -1,8 +1,6 @@
 import { Application, Assets, Texture } from 'pixi.js';
 import { WorldRenderer } from '../rendering/WorldRenderer';
 
-import { GAME_CONFIG } from '../config/gameConfig';
-
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { CombatSystem } from '../systems/CombatSystem';
 import { EnemySystem } from '../systems/EnemySystem';
@@ -31,8 +29,6 @@ export class Game {
     private readonly spawnSystem = new SpawnSystem();
     private readonly playerSystem = new PlayerSystem();
     private readonly combatSystem = new CombatSystem();
-
-    private chaserContactCooldown = 0;
 
     private player: Player | null = null;
 
@@ -155,20 +151,12 @@ export class Game {
                     );
                 }
 
-                if (
-                    this.collisionSystem.isEnemyCollidingWithPlayer(
-                        enemy,
-                        this.player,
-                    ) &&
-                    this.chaserContactCooldown <= 0
-                ) {
-                    this.player.takeDamage(
-                        GAME_CONFIG.enemy.chaser.contactDamage,
-                    );
-
-                    this.chaserContactCooldown =
-                        GAME_CONFIG.enemy.chaser.contactDamageCooldown;
-                }
+                this.combatSystem.resolveChaserContactDamage(
+                    enemy,
+                    this.player,
+                    this.collisionSystem,
+                    deltaTime,
+                );
             }
 
             if (enemy.type === 'shooter') {
@@ -209,11 +197,6 @@ export class Game {
         }
 
         this.weaponSystem.update(deltaTime);
-
-        this.chaserContactCooldown = Math.max(
-            0,
-            this.chaserContactCooldown - deltaTime,
-        );
 
         this.playerSystem.updateMovement(
             this.player,

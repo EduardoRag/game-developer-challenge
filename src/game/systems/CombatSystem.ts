@@ -54,4 +54,31 @@ export class CombatSystem {
             }
         }
     }
+
+    public resolveChaserContactDamage(
+        enemy: Enemy,
+        player: Player,
+        collisionSystem: CollisionSystem,
+        deltaTime: number,
+    ) {
+        enemy.updateContactDamageCooldown(deltaTime);
+
+        if (
+            !collisionSystem.isEnemyCollidingWithPlayer(
+                enemy,
+                player,
+            ) ||
+            !enemy.canDealContactDamage()
+        ) {
+            return;
+        }
+
+        player.takeDamage(
+            GAME_CONFIG.enemy.chaser.contactDamage,
+        );
+
+        enemy.startContactDamageCooldown(
+            GAME_CONFIG.enemy.chaser.contactDamageCooldown,
+        );
+    }
 }
