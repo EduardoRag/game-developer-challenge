@@ -11,6 +11,8 @@ import { WeaponSystem } from '../systems/WeaponSystem';
 
 import { Player } from '../entities/Player';
 
+import { GAME_CONFIG } from '../config/gameConfig';
+
 import type { EnemyType } from '../entities/Enemy';
 import { InputManager } from '../input/InputManager';
 
@@ -20,6 +22,7 @@ export class Game {
     private readonly app: Application;
     private readonly container: HTMLDivElement;
     private gameState: GameState = 'playing';
+    private score = 0;
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
@@ -131,7 +134,7 @@ export class Game {
         this.updateEnemies(deltaTime);
         this.updateProjectiles(deltaTime);
 
-        this.enemySystem.destroyDeadEnemies();
+        this.destroyDeadEnemies();
 
         if (this.player.isDead()) {
             this.gameState = 'gameOver';
@@ -176,6 +179,17 @@ export class Game {
     private updateEnemies(deltaTime: number) {
         if (!this.player) {
             return;
+        }
+
+        this.spawnSystem.update(deltaTime);
+
+        if (this.spawnSystem.canSpawnEnemy()) {
+            const enemyType: EnemyType =
+                Math.random() < 0.5 ? 'chaser' : 'shooter';
+
+            void this.spawnEnemy(enemyType);
+
+            this.spawnSystem.resetEnemySpawnCooldown();
         }
 
         const enemies = this.enemySystem.getEnemies();
@@ -234,6 +248,15 @@ export class Game {
         );
     }
 
+    private destroyDeadEnemies() {
+        const destroyedEnemyTypes =
+            this.enemySystem.destroyDeadEnemies();
+
+        for (const enemyType of destroyedEnemyTypes) {
+            this.score += GAME_CONFIG.enemy[enemyType].score;
+        }
+    }
+
     private async createPlayer() {
         const texture = await Assets.load(
             '/assets/png/default/ships/ship_1.png',
@@ -262,32 +285,38 @@ export class Game {
     }
 
     private async spawnEnemy(type: EnemyType) {
-        if (!this.player) {
+        if (!this.player || this.spawnSystem.isSpawningEnemy()) {
             return;
         }
 
-        const position = this.spawnSystem.findSafePosition(
-            this.app.screen.width,
-            this.app.screen.height,
-            this.player.getPosition(),
-            this.world.obstacles,
-        );
+        this.spawnSystem.startEnemySpawn();
 
-        if (!position) {
-            return;
+        try {
+            const position = this.spawnSystem.findSafePosition(
+                this.app.screen.width,
+                this.app.screen.height,
+                this.player.getPosition(),
+                this.world.obstacles,
+            );
+
+            if (!position) {
+                return;
+            }
+
+            const enemy = await this.enemySystem.create(
+                type,
+                position.x,
+                position.y,
+            );
+
+            if (this.destroyed) {
+                enemy.sprite.destroy();
+                return;
+            }
+
+            this.app.stage.addChild(enemy.sprite);
+        } finally {
+            this.spawnSystem.finishEnemySpawn();
         }
-
-        const enemy = await this.enemySystem.create(
-            type,
-            position.x,
-            position.y,
-        );
-
-        if (this.destroyed) {
-            enemy.sprite.destroy();
-            return;
-        }
-
-        this.app.stage.addChild(enemy.sprite);
     }
 }

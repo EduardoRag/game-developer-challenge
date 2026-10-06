@@ -14,6 +14,7 @@ type Obstacle = {
 
 export class SpawnSystem {
     private enemySpawnCooldown: number = GAME_CONFIG.enemy.spawn.interval;
+    private spawningEnemy = false;
 
     public isPositionSafeFromPlayer(
         position: Position,
@@ -93,5 +94,17 @@ export class SpawnSystem {
 
     public resetEnemySpawnCooldown() {
         this.enemySpawnCooldown = GAME_CONFIG.enemy.spawn.interval;
+    }
+
+    public isSpawningEnemy() {
+        return this.spawningEnemy;
+    }
+
+    public startEnemySpawn() {
+        this.spawningEnemy = true;
+    }
+
+    public finishEnemySpawn() {
+        this.spawningEnemy = false;
     }
 }

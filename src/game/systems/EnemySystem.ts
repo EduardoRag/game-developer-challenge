@@ -262,18 +262,28 @@ export class EnemySystem {
     }
 
     public destroyDeadEnemies() {
-        for (let index = this.enemies.length - 1; index >= 0; index--) {
+        const destroyedEnemyTypes: EnemyType[] = [];
+
+        for (
+            let index = this.enemies.length - 1;
+            index >= 0;
+            index--
+        ) {
             const enemy = this.enemies[index];
 
             if (!enemy.isDead()) {
                 continue;
             }
 
+            destroyedEnemyTypes.push(enemy.type);
+
             enemy.sprite.removeFromParent();
             enemy.sprite.destroy();
 
             this.enemies.splice(index, 1);
         }
+
+        return destroyedEnemyTypes;
     }
 
     public fireShooters(
