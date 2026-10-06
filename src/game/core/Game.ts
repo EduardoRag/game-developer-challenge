@@ -4,6 +4,7 @@ import { WorldRenderer } from '../rendering/WorldRenderer';
 import { GAME_CONFIG } from '../config/gameConfig';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
+import { ProjectileSystem } from '../systems/ProjectileSystem';
 
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
@@ -32,7 +33,7 @@ export class Game {
     private readonly enemies: Enemy[] = [];
 
     private projectileTexture: Texture | null = null;
-    private readonly projectiles: Projectile[] = [];
+    private readonly projectileSystem = new ProjectileSystem();
 
     private initialized = false;
     private destroyed = false;
@@ -260,10 +261,12 @@ export class Game {
                 GAME_CONFIG.player.fireCooldown.broadside;
         }
 
-        for (let index = this.projectiles.length - 1; index >= 0; index--) {
-            const projectile = this.projectiles[index];
+        this.projectileSystem.update(deltaTime);
 
-            projectile.update(deltaTime);
+        const projectiles = this.projectileSystem.getProjectiles();
+
+        for (let index = projectiles.length - 1; index >= 0; index--) {
+            const projectile = projectiles[index];
 
             const hitEnemy = this.enemies.find((enemy) =>
                 this.collisionSystem.isProjectileCollidingWithEnemy(
@@ -278,7 +281,7 @@ export class Game {
                 this.app.stage.removeChild(projectile.sprite);
                 projectile.sprite.destroy();
 
-                this.projectiles.splice(index, 1);
+                this.projectileSystem.remove(index);
 
                 continue;
             }
@@ -293,7 +296,7 @@ export class Game {
                 this.app.stage.removeChild(projectile.sprite);
                 projectile.sprite.destroy();
 
-                this.projectiles.splice(index, 1);
+                this.projectileSystem.remove(index);
             }
         }
 
@@ -329,7 +332,7 @@ export class Game {
 
         projectile.sprite.position.set(position.x, position.y);
 
-        this.projectiles.push(projectile);
+        this.projectileSystem.add(projectile);
         this.app.stage.addChild(projectile.sprite);
     }
 
@@ -394,7 +397,7 @@ export class Game {
                 position.y + forwardDirection.y * shot.offset,
             );
 
-            this.projectiles.push(projectile);
+            this.projectileSystem.add(projectile);
             this.app.stage.addChild(projectile.sprite);
         }
     }
