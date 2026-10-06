@@ -15,7 +15,7 @@ import { GAME_CONFIG } from '../config/gameConfig';
 
 import type { EnemyType } from '../entities/Enemy';
 import type { GameSessionConfig } from '../types/GameSessionConfig';
-import type { GameSnapshot, GameState } from '../types/GameSnapshot';
+import type { GameEndReason, GameSnapshot, GameState } from '../types/GameSnapshot';
 
 import { InputManager } from '../input/InputManager';
 
@@ -29,6 +29,8 @@ export class Game {
 
     private score = 0;
     private timeRemaining: number;
+    private elapsedTime = 0;
+    private endReason: GameEndReason | null = null;
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
@@ -186,11 +188,10 @@ export class Game {
 
         this.destroyDeadEnemies();
 
-        if (
-            this.player.isDead() ||
-            this.timeRemaining <= 0
-        ) {
-            this.gameState = 'gameOver';
+        if (this.player.isDead()) {
+            this.endGame('shipDestroyed');
+        } else if (this.timeRemaining <= 0) {
+            this.endGame('timeUp');
         }
 
         this.emitSnapshot();
@@ -398,7 +399,9 @@ export class Game {
             maxHealth: GAME_CONFIG.player.maxHealth,
             score: this.score,
             timeRemaining: Math.ceil(this.timeRemaining),
+            elapsedTime: Math.floor(this.elapsedTime),
             gameState: this.gameState,
+            endReason: this.endReason,
         };
 
         if (
@@ -407,7 +410,9 @@ export class Game {
             this.lastSnapshot.maxHealth === snapshot.maxHealth &&
             this.lastSnapshot.score === snapshot.score &&
             this.lastSnapshot.timeRemaining === snapshot.timeRemaining &&
-            this.lastSnapshot.gameState === snapshot.gameState
+            this.lastSnapshot.elapsedTime === snapshot.elapsedTime &&
+            this.lastSnapshot.gameState === snapshot.gameState &&
+            this.lastSnapshot.endReason === snapshot.endReason
         ) {
             return;
         }
@@ -416,7 +421,23 @@ export class Game {
         this.onSnapshotChange?.(snapshot);
     }
 
+    private endGame(reason: GameEndReason) {
+        if (this.gameState === 'gameOver') {
+            return;
+        }
+
+        this.endReason = reason;
+        this.gameState = 'gameOver';
+    }
+
     private updateTimer(deltaTime: number) {
+        const elapsedDelta = Math.min(
+            deltaTime,
+            this.timeRemaining,
+        );
+
+        this.elapsedTime += elapsedDelta;
+
         this.timeRemaining = Math.max(
             0,
             this.timeRemaining - deltaTime,

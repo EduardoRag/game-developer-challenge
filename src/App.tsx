@@ -28,6 +28,8 @@ const INITIAL_SNAPSHOT: GameSnapshot = {
   score: 0,
   timeRemaining: GAME_CONFIG.session.duration,
   gameState: 'playing',
+  elapsedTime: 0,
+  endReason: null,
 };
 
 const App = () => {

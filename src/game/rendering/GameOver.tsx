@@ -1,7 +1,5 @@
 import type { GameSnapshot } from '../types/GameSnapshot';
 
-import { GAME_CONFIG } from '../config/gameConfig';
-
 type GameOverProps = {
     snapshot: GameSnapshot;
     onRestart: () => void;
@@ -13,10 +11,8 @@ export const GameOver = ({
     onRestart,
     onMainMenu,
 }: GameOverProps) => {
-    const elapsedTime = GAME_CONFIG.session.duration - snapshot.timeRemaining;
-
-    const minutes = Math.floor(elapsedTime / 60);
-    const seconds = elapsedTime % 60;
+    const minutes = Math.floor(snapshot.elapsedTime / 60);
+    const seconds = snapshot.elapsedTime % 60;
 
     const formattedTime = `${minutes
         .toString()
@@ -24,10 +20,9 @@ export const GameOver = ({
             .toString()
             .padStart(2, '0')}`;
 
-    const resultReason =
-        snapshot.timeRemaining <= 0
-            ? 'TIME UP'
-            : 'SHIP DESTROYED';
+    const resultReason = snapshot.endReason === 'timeUp'
+        ? 'TIME UP'
+        : 'SHIP DESTROYED';
 
     return (
         <div
