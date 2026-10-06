@@ -127,6 +127,57 @@ export class Game {
             return;
         }
 
+        this.updatePlayer(deltaTime);
+        this.updateEnemies(deltaTime);
+        this.updateProjectiles(deltaTime);
+
+        this.enemySystem.destroyDeadEnemies();
+
+        if (this.player.isDead()) {
+            this.gameState = 'gameOver';
+        }
+
+        this.input.clearFrameState();
+    }
+
+    private updatePlayer(deltaTime: number) {
+        if (!this.player) {
+            return;
+        }
+
+        this.weaponSystem.update(deltaTime);
+
+        this.playerSystem.updateMovement(
+            this.player,
+            this.input,
+            this.collisionSystem,
+            this.world.obstacles,
+            this.app.screen.width,
+            this.app.screen.height,
+            deltaTime,
+        );
+
+        if (!this.projectileTexture) {
+            return;
+        }
+
+        const projectiles = this.weaponSystem.handlePlayerInput(
+            this.player,
+            this.input,
+            this.projectileTexture,
+            this.projectileSystem,
+        );
+
+        for (const projectile of projectiles) {
+            this.app.stage.addChild(projectile.sprite);
+        }
+    }
+
+    private updateEnemies(deltaTime: number) {
+        if (!this.player) {
+            return;
+        }
+
         const enemies = this.enemySystem.getEnemies();
 
         const shootersReadyToFire = this.enemySystem.update(
@@ -143,45 +194,30 @@ export class Game {
             deltaTime,
         );
 
-        if (this.projectileTexture) {
-            const enemyProjectiles = this.enemySystem.fireShooters(
-                shootersReadyToFire,
-                this.player,
-                this.projectileTexture,
-                this.projectileSystem,
-            );
-
-            for (const projectile of enemyProjectiles) {
-                this.app.stage.addChild(projectile.sprite);
-            }
+        if (!this.projectileTexture) {
+            return;
         }
 
-        this.weaponSystem.update(deltaTime);
-
-        this.playerSystem.updateMovement(
+        const projectiles = this.enemySystem.fireShooters(
+            shootersReadyToFire,
             this.player,
-            this.input,
-            this.collisionSystem,
-            this.world.obstacles,
-            this.app.screen.width,
-            this.app.screen.height,
-            deltaTime,
+            this.projectileTexture,
+            this.projectileSystem,
         );
 
-        if (this.projectileTexture) {
-            const newProjectiles = this.weaponSystem.handlePlayerInput(
-                this.player,
-                this.input,
-                this.projectileTexture,
-                this.projectileSystem,
-            );
+        for (const projectile of projectiles) {
+            this.app.stage.addChild(projectile.sprite);
+        }
+    }
 
-            for (const projectile of newProjectiles) {
-                this.app.stage.addChild(projectile.sprite);
-            }
+    private updateProjectiles(deltaTime: number) {
+        if (!this.player) {
+            return;
         }
 
         this.projectileSystem.update(deltaTime);
+
+        const enemies = this.enemySystem.getEnemies();
 
         this.combatSystem.resolveProjectileHits(
             this.player,
@@ -196,14 +232,6 @@ export class Game {
             this.world.obstacles,
             this.collisionSystem,
         );
-
-        this.enemySystem.destroyDeadEnemies();
-
-        if (this.player.isDead()) {
-            this.gameState = 'gameOver';
-        }
-
-        this.input.clearFrameState();
     }
 
     private async createPlayer() {
