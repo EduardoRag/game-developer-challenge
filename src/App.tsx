@@ -10,6 +10,10 @@ import type { GameSnapshot } from './game/types/GameSnapshot';
 import { MainMenu } from './app/MainMenu';
 import type { AppScreen } from './app/types';
 
+import { RankingScreen } from './features/ranking/RankingScreen';
+
+import { HistoryScreen } from './features/history/HistoryScreen';
+
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
   maxHealth: 100,
@@ -60,31 +64,17 @@ const App = () => {
 
   if (screen === 'ranking') {
     return (
-      <main>
-        <h1>Ranking</h1>
-
-        <button
-          type="button"
-          onClick={() => setScreen('menu')}
-        >
-          Back
-        </button>
-      </main>
+      <RankingScreen
+        onBack={() => setScreen('menu')}
+      />
     );
   }
 
   if (screen === 'history') {
     return (
-      <main>
-        <h1>History</h1>
-
-        <button
-          type="button"
-          onClick={() => setScreen('menu')}
-        >
-          Back
-        </button>
-      </main>
+      <HistoryScreen
+        onBack={() => setScreen('menu')}
+      />
     );
   }
 
