@@ -19,3 +19,142 @@ body {
   width: 100%;
   height: 100%;
 }
+
+.hud {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.player-health {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+}
+
+.player-health__heart {
+  position: relative;
+  z-index: 3;
+  width: 48px;
+  height: 48px;
+  margin-right: 8px;
+}
+
+.player-health__bar {
+  position: relative;
+  width: 256px;
+  height: 48px;
+}
+
+.player-health__fill {
+  position: absolute;
+  top: 15px;
+  left: 30px;
+  width: 196px;
+  height: 20px;
+  background-image: url('/assets/png/default/ui/hud/health_fill_green.png');
+  background-size: 256px 48px;
+  background-position: -30px -15px;
+  background-repeat: no-repeat;
+}
+
+.player-health__frame {
+  position: absolute;
+  inset: 0;
+  width: 256px;
+  height: 48px;
+}
+
+.player-health__text {
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 30px;
+  width: 196px;
+  transform: translateY(-50%);
+  text-align: center;
+  font-family: Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 1px 1px 2px black;
+}
+
+.score-counter {
+  position: absolute;
+  top: 24px;
+  right: 200px;
+  width: 160px;
+  height: 56px;
+}
+
+.score-counter__panel {
+  position: absolute;
+  inset: 0;
+  width: 160px;
+  height: 56px;
+}
+
+.score-counter__content {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.score-counter__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.score-counter__value {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 1px 1px 2px black;
+}
+
+.time-counter {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 160px;
+  height: 56px;
+}
+
+.time-counter__panel {
+  position: absolute;
+  inset: 0;
+  width: 160px;
+  height: 56px;
+}
+
+.time-counter__content {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.time-counter__icon {
+  width: 32px;
+  height: 32px;
+}
+
+.time-counter__value {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+  text-shadow: 1px 1px 2px black;
+}

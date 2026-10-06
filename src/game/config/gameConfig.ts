@@ -1,4 +1,8 @@
 export const GAME_CONFIG = {
+    session: {
+        duration: 10,
+    },
+
     player: {
         maxHealth: 100,
         moveSpeed: 180,

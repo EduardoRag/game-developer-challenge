@@ -14,6 +14,8 @@ import { Player } from '../entities/Player';
 import { GAME_CONFIG } from '../config/gameConfig';
 
 import type { EnemyType } from '../entities/Enemy';
+import type { GameSnapshot } from '../types/GameSnapshot';
+
 import { InputManager } from '../input/InputManager';
 
 type GameState = 'playing' | 'gameOver';
@@ -22,7 +24,11 @@ export class Game {
     private readonly app: Application;
     private readonly container: HTMLDivElement;
     private gameState: GameState = 'playing';
+
+    private onSnapshotChange?: (snapshot: GameSnapshot) => void;
+
     private score = 0;
+    private timeRemaining: number = GAME_CONFIG.session.duration;
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
@@ -32,11 +38,13 @@ export class Game {
     private readonly spawnSystem = new SpawnSystem();
     private readonly playerSystem = new PlayerSystem();
     private readonly combatSystem = new CombatSystem();
+    private readonly projectileSystem = new ProjectileSystem();
 
     private player: Player | null = null;
 
     private projectileTexture: Texture | null = null;
-    private readonly projectileSystem = new ProjectileSystem();
+
+    private lastSnapshot: GameSnapshot | null = null;
 
     private initialized = false;
     private destroyed = false;
@@ -99,6 +107,8 @@ export class Game {
             return;
         }
 
+        this.emitSnapshot();
+
         this.input.start();
         this.app.ticker.add(this.handleTick);
     }
@@ -130,13 +140,19 @@ export class Game {
             return;
         }
 
+        this.updateTimer(deltaTime);
+
         this.updatePlayer(deltaTime);
         this.updateEnemies(deltaTime);
         this.updateProjectiles(deltaTime);
 
         this.destroyDeadEnemies();
+        this.emitSnapshot();
 
-        if (this.player.isDead()) {
+        if (
+            this.player.isDead() ||
+            this.timeRemaining <= 0
+        ) {
             this.gameState = 'gameOver';
         }
 
@@ -318,5 +334,44 @@ export class Game {
         } finally {
             this.spawnSystem.finishEnemySpawn();
         }
+    }
+
+    public setSnapshotListener(
+        listener: (snapshot: GameSnapshot) => void,
+    ) {
+        this.onSnapshotChange = listener;
+    }
+
+    private emitSnapshot() {
+        if (!this.player) {
+            return;
+        }
+
+        const snapshot: GameSnapshot = {
+            health: this.player.getHealth(),
+            maxHealth: GAME_CONFIG.player.maxHealth,
+            score: this.score,
+            timeRemaining: Math.ceil(this.timeRemaining),
+        };
+
+        if (
+            this.lastSnapshot &&
+            this.lastSnapshot.health === snapshot.health &&
+            this.lastSnapshot.maxHealth === snapshot.maxHealth &&
+            this.lastSnapshot.score === snapshot.score &&
+            this.lastSnapshot.timeRemaining === snapshot.timeRemaining
+        ) {
+            return;
+        }
+
+        this.lastSnapshot = snapshot;
+        this.onSnapshotChange?.(snapshot);
+    }
+
+    private updateTimer(deltaTime: number) {
+        this.timeRemaining = Math.max(
+            0,
+            this.timeRemaining - deltaTime,
+        );
     }
 }
