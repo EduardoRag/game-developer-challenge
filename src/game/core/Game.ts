@@ -5,6 +5,7 @@ import { GAME_CONFIG } from '../config/gameConfig';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
+import { WeaponSystem } from '../systems/WeaponSystem';
 
 import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
@@ -22,10 +23,7 @@ export class Game {
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
     private readonly collisionSystem = new CollisionSystem();
-
-    private frontCannonCooldown = 0;
-    private leftCannonCooldown = 0;
-    private rightCannonCooldown = 0;
+    private readonly weaponSystem = new WeaponSystem();
 
     private chaserContactCooldown = 0;
 
@@ -172,20 +170,7 @@ export class Game {
             }
         }
 
-        this.frontCannonCooldown = Math.max(
-            0,
-            this.frontCannonCooldown - deltaTime,
-        );
-
-        this.leftCannonCooldown = Math.max(
-            0,
-            this.leftCannonCooldown - deltaTime,
-        );
-
-        this.rightCannonCooldown = Math.max(
-            0,
-            this.rightCannonCooldown - deltaTime,
-        );
+        this.weaponSystem.update(deltaTime);
 
         this.chaserContactCooldown = Math.max(
             0,
@@ -233,32 +218,53 @@ export class Game {
 
         if (
             this.input.wasPressed('Space') &&
-            this.frontCannonCooldown <= 0
+            this.weaponSystem.canFireFront() &&
+            this.projectileTexture
         ) {
-            this.fireFrontCannon();
+            const projectile = this.weaponSystem.fireFront(
+                this.player,
+                this.projectileTexture,
+                this.projectileSystem,
+            );
 
-            this.frontCannonCooldown =
-                GAME_CONFIG.player.fireCooldown.front;
+            this.app.stage.addChild(projectile.sprite);
+            this.weaponSystem.startFrontCooldown();
         }
 
         if (
             this.input.wasPressed('KeyQ') &&
-            this.leftCannonCooldown <= 0
+            this.weaponSystem.canFireLeftBroadside() &&
+            this.projectileTexture
         ) {
-            this.fireLeftCannon();
+            const projectiles = this.weaponSystem.fireLeftBroadside(
+                this.player,
+                this.projectileTexture,
+                this.projectileSystem,
+            );
 
-            this.leftCannonCooldown =
-                GAME_CONFIG.player.fireCooldown.broadside;
+            for (const projectile of projectiles) {
+                this.app.stage.addChild(projectile.sprite);
+            }
+
+            this.weaponSystem.startLeftBroadsideCooldown();
         }
 
         if (
             this.input.wasPressed('KeyE') &&
-            this.rightCannonCooldown <= 0
+            this.weaponSystem.canFireRightBroadside() &&
+            this.projectileTexture
         ) {
-            this.fireRightCannon();
+            const projectiles = this.weaponSystem.fireRightBroadside(
+                this.player,
+                this.projectileTexture,
+                this.projectileSystem,
+            );
 
-            this.rightCannonCooldown =
-                GAME_CONFIG.player.fireCooldown.broadside;
+            for (const projectile of projectiles) {
+                this.app.stage.addChild(projectile.sprite);
+            }
+
+            this.weaponSystem.startRightBroadsideCooldown();
         }
 
         this.projectileSystem.update(deltaTime);
@@ -314,92 +320,6 @@ export class Game {
         }
 
         this.input.clearFrameState();
-    }
-
-    private fireFrontCannon() {
-        if (!this.player || !this.projectileTexture) {
-            return;
-        }
-
-        const position = this.player.getFrontPosition();
-        const direction = this.player.getForwardDirection();
-
-        const projectile = new Projectile(
-            this.projectileTexture,
-            direction.x,
-            direction.y,
-        );
-
-        projectile.sprite.position.set(position.x, position.y);
-
-        this.projectileSystem.add(projectile);
-        this.app.stage.addChild(projectile.sprite);
-    }
-
-    private fireLeftCannon() {
-        if (!this.player) {
-            return;
-        }
-
-        this.fireBroadside(
-            this.player.getLeftPosition(),
-            this.player.getLeftDirection(),
-        );
-    }
-
-    private fireRightCannon() {
-        if (!this.player) {
-            return;
-        }
-
-        this.fireBroadside(
-            this.player.getRightPosition(),
-            this.player.getRightDirection(),
-        );
-    }
-
-    private fireBroadside(
-        position: { x: number; y: number },
-        direction: { x: number; y: number },
-    ) {
-        if (!this.projectileTexture || !this.player) {
-            return;
-        }
-
-        const forwardDirection = this.player.getForwardDirection();
-
-        const spacing = 20;
-        const spread = 0.2;
-
-        const shots = [
-            { offset: -spacing, spread: -spread },
-            { offset: 0, spread: 0 },
-            { offset: spacing, spread },
-        ];
-
-        for (const shot of shots) {
-            const directionX =
-                direction.x + forwardDirection.x * shot.spread;
-
-            const directionY =
-                direction.y + forwardDirection.y * shot.spread;
-
-            const length = Math.hypot(directionX, directionY);
-
-            const projectile = new Projectile(
-                this.projectileTexture,
-                directionX / length,
-                directionY / length,
-            );
-
-            projectile.sprite.position.set(
-                position.x + forwardDirection.x * shot.offset,
-                position.y + forwardDirection.y * shot.offset,
-            );
-
-            this.projectileSystem.add(projectile);
-            this.app.stage.addChild(projectile.sprite);
-        }
     }
 
     private isProjectileOutsideArena(projectile: Projectile) {
