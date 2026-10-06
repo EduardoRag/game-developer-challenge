@@ -7,10 +7,11 @@ export class Player {
 
     private health: number = GAME_CONFIG.player.maxHealth;
 
-    constructor(texture: Texture) {
+    constructor(texture: Texture, scale = 1) {
         this.sprite = new Sprite(texture);
 
         this.sprite.anchor.set(0.5);
+        this.sprite.scale.set(scale);
     }
 
     public getPosition() {

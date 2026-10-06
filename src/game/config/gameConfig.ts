@@ -44,4 +44,9 @@ export const GAME_CONFIG = {
     world: {
         tileSize: 64,
     },
+
+    responsive: {
+        mobileLandscapeMaxHeight: 500,
+        mobileLandscapeScale: 0.6,
+    },
 } as const;

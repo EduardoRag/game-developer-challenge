@@ -10,9 +10,10 @@ export class Enemy {
     private health: number;
     private fireCooldown = 0;
 
-    constructor(texture: Texture, type: EnemyType) {
+    constructor(texture: Texture, type: EnemyType, scale = 1) {
         this.sprite = new Sprite(texture);
         this.sprite.anchor.set(0.5);
+        this.sprite.scale.set(scale);
 
         this.type = type;
 

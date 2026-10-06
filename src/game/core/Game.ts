@@ -31,6 +31,7 @@ export class Game {
     private timeRemaining: number;
     private elapsedTime = 0;
     private endReason: GameEndReason | null = null;
+    private gameplayScale = 1;
 
     private readonly world = new WorldRenderer();
     private readonly input = new InputManager();
@@ -81,9 +82,16 @@ export class Game {
 
         this.container.appendChild(this.app.canvas);
 
+        const gameplayScale = this.app.screen.height <= GAME_CONFIG.responsive.mobileLandscapeMaxHeight
+            ? GAME_CONFIG.responsive.mobileLandscapeScale
+            : 1;
+
+        this.gameplayScale = gameplayScale;
+
         await this.world.initialize(
             this.app.screen.width,
             this.app.screen.height,
+            gameplayScale,
         );
 
         if (this.destroyed) {
@@ -92,7 +100,7 @@ export class Game {
 
         this.app.stage.addChild(this.world.container);
 
-        await this.createPlayer();
+        await this.createPlayer(gameplayScale);
 
         if (this.destroyed) {
             return;
@@ -314,7 +322,7 @@ export class Game {
         this.score += destroyedCount;
     }
 
-    private async createPlayer() {
+    private async createPlayer(scale: number) {
         const texture = await Assets.load(
             '/assets/png/default/ships/ship_1.png',
         );
@@ -323,7 +331,7 @@ export class Game {
             return;
         }
 
-        this.player = new Player(texture);
+        this.player = new Player(texture, scale);
 
         this.player.setPosition(
             this.app.screen.width / 2,
@@ -364,6 +372,7 @@ export class Game {
                 type,
                 position.x,
                 position.y,
+                this.gameplayScale,
             );
 
             if (this.destroyed) {

@@ -19,6 +19,7 @@ export class EnemySystem {
         type: EnemyType,
         x: number,
         y: number,
+        scale = 1,
     ) {
         const texturePath =
             type === 'chaser'
@@ -27,7 +28,7 @@ export class EnemySystem {
 
         const texture = await Assets.load(texturePath);
 
-        const enemy = new Enemy(texture, type);
+        const enemy = new Enemy(texture, type, scale);
 
         enemy.setPosition(x, y);
 
