@@ -11,13 +11,22 @@ export class ProjectileSystem {
         this.projectiles.push(projectile);
     }
 
-    public remove(index: number) {
-        this.projectiles.splice(index, 1);
-    }
-
     public update(deltaTime: number) {
         for (const projectile of this.projectiles) {
             projectile.update(deltaTime);
         }
+    }
+
+    public destroy(index: number) {
+        const projectile = this.projectiles[index];
+
+        if (!projectile) {
+            return;
+        }
+
+        projectile.sprite.removeFromParent();
+        projectile.sprite.destroy();
+
+        this.projectiles.splice(index, 1);
     }
 }

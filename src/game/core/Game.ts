@@ -255,9 +255,7 @@ export class Game {
                 if (hitEnemy) {
                     hitEnemy.takeDamage(GAME_CONFIG.projectile.playerDamage);
 
-                    this.app.stage.removeChild(projectile.sprite);
-                    projectile.sprite.destroy();
-                    this.projectileSystem.remove(index);
+                    this.projectileSystem.destroy(index);
 
                     continue;
                 }
@@ -272,9 +270,7 @@ export class Game {
             ) {
                 this.player.takeDamage(GAME_CONFIG.projectile.enemyDamage);
 
-                this.app.stage.removeChild(projectile.sprite);
-                projectile.sprite.destroy();
-                this.projectileSystem.remove(index);
+                this.projectileSystem.destroy(index);
 
                 continue;
             }
@@ -286,10 +282,7 @@ export class Game {
                     this.world.obstacles,
                 )
             ) {
-                this.app.stage.removeChild(projectile.sprite);
-                projectile.sprite.destroy();
-
-                this.projectileSystem.remove(index);
+                this.projectileSystem.destroy(index);
             }
         }
 
