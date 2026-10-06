@@ -4,6 +4,7 @@ import { WorldRenderer } from '../rendering/WorldRenderer';
 import { GAME_CONFIG } from '../config/gameConfig';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
+import { EnemySystem } from '../systems/EnemySystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
 
@@ -24,11 +25,11 @@ export class Game {
     private readonly input = new InputManager();
     private readonly collisionSystem = new CollisionSystem();
     private readonly weaponSystem = new WeaponSystem();
+    private readonly enemySystem = new EnemySystem();
 
     private chaserContactCooldown = 0;
 
     private player: Player | null = null;
-    private readonly enemies: Enemy[] = [];
 
     private projectileTexture: Texture | null = null;
     private readonly projectileSystem = new ProjectileSystem();
@@ -122,19 +123,15 @@ export class Game {
             return;
         }
 
-        for (const enemy of this.enemies) {
-            const playerPosition = this.player.getPosition();
+        const enemies = this.enemySystem.getEnemies();
 
-            enemy.faceTarget(
-                playerPosition.x,
-                playerPosition.y,
-            );
-
+        for (const enemy of enemies) {
             const previousPosition = enemy.getPosition();
 
-            enemy.moveForward(
+            this.enemySystem.updateChaser(
+                enemy,
+                this.player,
                 deltaTime,
-                GAME_CONFIG.enemy.chaser.moveSpeed,
             );
 
             if (
@@ -274,7 +271,7 @@ export class Game {
         for (let index = projectiles.length - 1; index >= 0; index--) {
             const projectile = projectiles[index];
 
-            const hitEnemy = this.enemies.find((enemy) =>
+            const hitEnemy = enemies.find((enemy) =>
                 this.collisionSystem.isProjectileCollidingWithEnemy(
                     projectile,
                     enemy,
@@ -306,17 +303,11 @@ export class Game {
             }
         }
 
-        for (let index = this.enemies.length - 1; index >= 0; index--) {
-            const enemy = this.enemies[index];
+        const deadEnemies = this.enemySystem.removeDeadEnemies();
 
-            if (!enemy.isDead()) {
-                continue;
-            }
-
+        for (const enemy of deadEnemies) {
             this.app.stage.removeChild(enemy.sprite);
             enemy.sprite.destroy();
-
-            this.enemies.splice(index, 1);
         }
 
         this.input.clearFrameState();
@@ -365,7 +356,7 @@ export class Game {
 
         chaser.setPosition(x, y);
 
-        this.enemies.push(chaser);
+        this.enemySystem.add(chaser);
         this.app.stage.addChild(chaser.sprite);
     }
 
