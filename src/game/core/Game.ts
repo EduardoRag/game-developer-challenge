@@ -4,6 +4,7 @@ import { WorldRenderer } from '../rendering/WorldRenderer';
 import { GAME_CONFIG } from '../config/gameConfig';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
+import { CombatSystem } from '../systems/CombatSystem';
 import { EnemySystem } from '../systems/EnemySystem';
 import { PlayerSystem } from '../systems/PlayerSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
@@ -30,6 +31,7 @@ export class Game {
     private readonly enemySystem = new EnemySystem();
     private readonly spawnSystem = new SpawnSystem();
     private readonly playerSystem = new PlayerSystem();
+    private readonly combatSystem = new CombatSystem();
 
     private chaserContactCooldown = 0;
 
@@ -239,41 +241,17 @@ export class Game {
 
         this.projectileSystem.update(deltaTime);
 
+        this.combatSystem.resolveProjectileHits(
+            this.player,
+            enemies,
+            this.projectileSystem,
+            this.collisionSystem,
+        );
+
         const projectiles = this.projectileSystem.getProjectiles();
 
         for (let index = projectiles.length - 1; index >= 0; index--) {
             const projectile = projectiles[index];
-
-            if (projectile.owner === 'player') {
-                const hitEnemy = enemies.find((enemy) =>
-                    this.collisionSystem.isProjectileCollidingWithEnemy(
-                        projectile,
-                        enemy,
-                    ),
-                );
-
-                if (hitEnemy) {
-                    hitEnemy.takeDamage(GAME_CONFIG.projectile.playerDamage);
-
-                    this.projectileSystem.destroy(index);
-
-                    continue;
-                }
-            }
-
-            if (
-                projectile.owner === 'enemy' &&
-                this.collisionSystem.isProjectileCollidingWithPlayer(
-                    projectile,
-                    this.player,
-                )
-            ) {
-                this.player.takeDamage(GAME_CONFIG.projectile.enemyDamage);
-
-                this.projectileSystem.destroy(index);
-
-                continue;
-            }
 
             if (
                 this.isProjectileOutsideArena(projectile) ||
