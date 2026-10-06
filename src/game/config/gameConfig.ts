@@ -1,6 +1,6 @@
 export const GAME_CONFIG = {
     session: {
-        duration: 10,
+        duration: 120,
     },
 
     player: {
