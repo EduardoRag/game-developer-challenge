@@ -59,6 +59,14 @@ export class Enemy {
         return this.health <= 0;
     }
 
+    public getHealth() {
+        return this.health;
+    }
+
+    public getHealthPercentage() {
+        return this.health / this.getMaxHealth();
+    }
+
     private getMaxHealth() {
         switch (this.type) {
             case 'chaser':

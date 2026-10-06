@@ -9,9 +9,11 @@ import { Projectile } from '../entities/Projectile';
 import { CollisionSystem } from './CollisionSystem';
 import { ProjectileSystem } from './ProjectileSystem';
 
+import { EnemyHealthBar } from '../rendering/EnemyHealthBar';
 
 export class EnemySystem {
     private readonly enemies: Enemy[] = [];
+    private readonly healthBars = new Map<Enemy, EnemyHealthBar>();
 
     public async create(
         type: EnemyType,
@@ -30,6 +32,10 @@ export class EnemySystem {
         enemy.setPosition(x, y);
 
         this.add(enemy);
+
+        const healthBar = await EnemyHealthBar.create(enemy);
+
+        this.healthBars.set(enemy, healthBar);
 
         return enemy;
     }
@@ -258,6 +264,10 @@ export class EnemySystem {
             }
         }
 
+        for (const enemy of this.enemies) {
+            this.healthBars.get(enemy)?.update();
+        }
+
         return shootersReadyToFire;
     }
 
@@ -276,6 +286,11 @@ export class EnemySystem {
             }
 
             destroyedEnemyTypes.push(enemy.type);
+
+            const healthBar = this.healthBars.get(enemy);
+
+            healthBar?.destroy();
+            this.healthBars.delete(enemy);
 
             enemy.sprite.removeFromParent();
             enemy.sprite.destroy();
@@ -308,5 +323,9 @@ export class EnemySystem {
         }
 
         return projectiles;
+    }
+
+    public getHealthBar(enemy: Enemy) {
+        return this.healthBars.get(enemy);
     }
 }

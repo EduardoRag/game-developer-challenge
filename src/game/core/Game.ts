@@ -331,6 +331,12 @@ export class Game {
             }
 
             this.app.stage.addChild(enemy.sprite);
+
+            const healthBar = this.enemySystem.getHealthBar(enemy);
+
+            if (healthBar) {
+                this.app.stage.addChild(healthBar.container);
+            }
         } finally {
             this.spawnSystem.finishEnemySpawn();
         }
