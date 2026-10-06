@@ -469,6 +469,103 @@ body {
   gap: 10px;
 }
 
+/* Options */
+
+.options-screen {
+  gap: 16px;
+}
+
+.options-screen h1 {
+  margin: 18px 0 8px;
+  font-family: var(--font-game);
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--game-text);
+  text-shadow: 2px 2px 3px rgb(0 0 0 / 60%);
+}
+
+.options-screen__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.options-screen__field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-game);
+  font-weight: 900;
+  color: var(--game-text);
+  text-align: center;
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 60%);
+}
+
+.options-screen__input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.options-screen__input input {
+  width: 100px;
+  padding: 8px;
+  border: 2px solid #6d452b;
+  border-radius: 6px;
+  background: #fff4d6;
+  font-family: var(--font-game);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--game-button-text);
+  text-align: center;
+}
+
+.options-screen__input input:focus-visible {
+  outline: 3px solid white;
+  outline-offset: 2px;
+}
+
+.options-screen__field small {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.options-screen__error {
+  margin: 0;
+  font-size: 12px;
+}
+
+.options-screen__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: auto;
+}
+
+.options-screen__actions .menu-button {
+  transform: scale(0.8);
+}
+
+.options-screen__text-button {
+  border: 0;
+  padding: 5px 10px;
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 900;
+  color: var(--game-text);
+  text-decoration: underline;
+  text-shadow: 1px 1px 2px black;
+}
+
+.options-screen__text-button:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
 /* Responsive */
 
 @media (max-width: 640px) {

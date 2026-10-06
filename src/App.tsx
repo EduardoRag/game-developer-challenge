@@ -15,7 +15,10 @@ import { RankingScreen } from './features/ranking/RankingScreen';
 import { HistoryScreen } from './features/history/HistoryScreen';
 
 import { useCreateSessionMutation } from './infrastructure/api/sessionMutations';
-import { MenuPanel } from './shared/components/MenuPanel';
+
+import { OptionsScreen } from './features/options/OptionsScreen';
+import { loadGameOptions } from './features/options/optionsStorage';
+import type { GameOptions } from './features/options/types';
 
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
@@ -30,6 +33,8 @@ const App = () => {
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [gameKey, setGameKey] = useState(0);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
+
+  const [gameOptions, setGameOptions] = useState<GameOptions>(() => loadGameOptions());
 
   const handleSnapshotChange = useCallback(
     (nextSnapshot: GameSnapshot) => {
@@ -67,6 +72,11 @@ const App = () => {
     setScreen('options');
   };
 
+  const handleSaveOptions = (options: GameOptions) => {
+    setGameOptions(options);
+    setScreen('menu');
+  };
+
   if (screen === 'menu') {
     return (
       <MainMenu
@@ -96,19 +106,11 @@ const App = () => {
 
   if (screen === 'options') {
     return (
-      <MenuPanel>
-        <div className="data-screen__content">
-          <h1>OPTIONS</h1>
-
-          <button
-            type="button"
-            className="menu-button data-screen__back"
-            onClick={() => setScreen('menu')}
-          >
-            BACK
-          </button>
-        </div>
-      </MenuPanel>
+      <OptionsScreen
+        options={gameOptions}
+        onSave={handleSaveOptions}
+        onBack={() => setScreen('menu')}
+      />
     );
   }
 
