@@ -67,6 +67,7 @@ export class WeaponSystem {
             projectileTexture,
             direction.x,
             direction.y,
+            'player',
         );
 
         projectile.sprite.position.set(position.x, position.y);
@@ -109,6 +110,7 @@ export class WeaponSystem {
                 projectileTexture,
                 directionX / length,
                 directionY / length,
+                'player',
             );
 
             projectile.sprite.position.set(

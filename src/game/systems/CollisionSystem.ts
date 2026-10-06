@@ -73,4 +73,14 @@ export class CollisionSystem {
             player.getBounds(),
         );
     }
+
+    public isProjectileCollidingWithPlayer(
+        projectile: Projectile,
+        player: Player,
+    ) {
+        return this.intersects(
+            projectile.sprite.getBounds(),
+            player.getBounds(),
+        );
+    }
 }

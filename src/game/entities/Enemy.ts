@@ -8,6 +8,7 @@ export class Enemy {
     public readonly type: EnemyType;
 
     private health: number;
+    private fireCooldown = 0;
 
     constructor(texture: Texture, type: EnemyType) {
         this.sprite = new Sprite(texture);
@@ -63,7 +64,22 @@ export class Enemy {
                 return GAME_CONFIG.enemy.chaser.maxHealth;
 
             case 'shooter':
-                return 50;
+                return GAME_CONFIG.enemy.shooter.maxHealth;
         }
+    }
+
+    public updateFireCooldown(deltaTime: number) {
+        this.fireCooldown = Math.max(
+            0,
+            this.fireCooldown - deltaTime,
+        );
+    }
+
+    public canFire() {
+        return this.fireCooldown <= 0;
+    }
+
+    public startFireCooldown(duration: number) {
+        this.fireCooldown = duration;
     }
 }

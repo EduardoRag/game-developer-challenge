@@ -17,11 +17,21 @@ export const GAME_CONFIG = {
             contactDamage: 20,
             contactDamageCooldown: 1,
         },
+
+        shooter: {
+            maxHealth: 50,
+            moveSpeed: 70,
+            minDistance: 220,
+            preferredDistance: 300,
+            fireRange: 400,
+            fireCooldown: 1.5,
+        },
     },
 
     projectile: {
         speed: 500,
-        damage: 25
+        playerDamage: 25,
+        enemyDamage: 15,
     },
 
     world: {

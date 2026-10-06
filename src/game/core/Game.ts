@@ -6,12 +6,13 @@ import { GAME_CONFIG } from '../config/gameConfig';
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { EnemySystem } from '../systems/EnemySystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
+import { SpawnSystem } from '../systems/SpawnSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
 
-import { Enemy } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
 
+import type { EnemyType } from '../entities/Enemy';
 import { InputManager } from '../input/InputManager';
 
 type GameState = 'playing' | 'gameOver';
@@ -26,6 +27,7 @@ export class Game {
     private readonly collisionSystem = new CollisionSystem();
     private readonly weaponSystem = new WeaponSystem();
     private readonly enemySystem = new EnemySystem();
+    private readonly spawnSystem = new SpawnSystem();
 
     private chaserContactCooldown = 0;
 
@@ -75,10 +77,13 @@ export class Game {
             return;
         }
 
-        await this.createChaser(
-            this.app.screen.width * 0.75,
-            this.app.screen.height * 0.5,
-        );
+        await this.spawnEnemy('chaser');
+
+        if (this.destroyed) {
+            return;
+        }
+
+        await this.spawnEnemy('shooter');
 
         if (this.destroyed) {
             return;
@@ -126,45 +131,78 @@ export class Game {
         const enemies = this.enemySystem.getEnemies();
 
         for (const enemy of enemies) {
-            const previousPosition = enemy.getPosition();
+            if (enemy.type === 'chaser') {
+                const previousPosition = enemy.getPosition();
 
-            this.enemySystem.updateChaser(
-                enemy,
-                this.player,
-                deltaTime,
-            );
-
-            if (
-                this.collisionSystem.isEnemyCollidingWithObstacle(
-                    enemy,
-                    this.world.obstacles,
-                )
-            ) {
-                enemy.setPosition(
-                    previousPosition.x,
-                    previousPosition.y,
-                );
-            }
-
-            if (
-                this.collisionSystem.isEnemyCollidingWithPlayer(
+                this.enemySystem.updateChaser(
                     enemy,
                     this.player,
-                ) &&
-                this.chaserContactCooldown <= 0
-            ) {
-                this.player.takeDamage(
-                    GAME_CONFIG.enemy.chaser.contactDamage,
+                    deltaTime,
                 );
 
-                this.chaserContactCooldown =
-                    GAME_CONFIG.enemy.chaser.contactDamageCooldown;
+                if (
+                    this.collisionSystem.isEnemyCollidingWithObstacle(
+                        enemy,
+                        this.world.obstacles,
+                    )
+                ) {
+                    enemy.setPosition(
+                        previousPosition.x,
+                        previousPosition.y,
+                    );
+                }
 
-                console.log(
-                    'Player health:',
-                    this.player.getHealth(),
-                );
+                if (
+                    this.collisionSystem.isEnemyCollidingWithPlayer(
+                        enemy,
+                        this.player,
+                    ) &&
+                    this.chaserContactCooldown <= 0
+                ) {
+                    this.player.takeDamage(
+                        GAME_CONFIG.enemy.chaser.contactDamage,
+                    );
+
+                    this.chaserContactCooldown =
+                        GAME_CONFIG.enemy.chaser.contactDamageCooldown;
+                }
             }
+
+            if (enemy.type === 'shooter') {
+                const previousPosition = enemy.getPosition();
+
+                const canFire = this.enemySystem.updateShooter(
+                    enemy,
+                    this.player,
+                    deltaTime,
+                );
+
+                if (
+                    this.collisionSystem.isEnemyCollidingWithObstacle(
+                        enemy,
+                        this.world.obstacles,
+                    )
+                ) {
+                    enemy.setPosition(
+                        previousPosition.x,
+                        previousPosition.y,
+                    );
+                }
+
+                if (canFire && this.projectileTexture) {
+                    const projectile = this.enemySystem.fireAtPlayer(
+                        enemy,
+                        this.player,
+                        this.projectileTexture,
+                        this.projectileSystem,
+                    );
+
+                    if (projectile) {
+                        this.app.stage.addChild(projectile.sprite);
+                    }
+                }
+            }
+
         }
 
         this.weaponSystem.update(deltaTime);
@@ -271,19 +309,36 @@ export class Game {
         for (let index = projectiles.length - 1; index >= 0; index--) {
             const projectile = projectiles[index];
 
-            const hitEnemy = enemies.find((enemy) =>
-                this.collisionSystem.isProjectileCollidingWithEnemy(
-                    projectile,
-                    enemy,
-                ),
-            );
+            if (projectile.owner === 'player') {
+                const hitEnemy = enemies.find((enemy) =>
+                    this.collisionSystem.isProjectileCollidingWithEnemy(
+                        projectile,
+                        enemy,
+                    ),
+                );
 
-            if (hitEnemy) {
-                hitEnemy.takeDamage(GAME_CONFIG.projectile.damage);
+                if (hitEnemy) {
+                    hitEnemy.takeDamage(GAME_CONFIG.projectile.playerDamage);
+
+                    this.app.stage.removeChild(projectile.sprite);
+                    projectile.sprite.destroy();
+                    this.projectileSystem.remove(index);
+
+                    continue;
+                }
+            }
+
+            if (
+                projectile.owner === 'enemy' &&
+                this.collisionSystem.isProjectileCollidingWithPlayer(
+                    projectile,
+                    this.player,
+                )
+            ) {
+                this.player.takeDamage(GAME_CONFIG.projectile.enemyDamage);
 
                 this.app.stage.removeChild(projectile.sprite);
                 projectile.sprite.destroy();
-
                 this.projectileSystem.remove(index);
 
                 continue;
@@ -308,6 +363,10 @@ export class Game {
         for (const enemy of deadEnemies) {
             this.app.stage.removeChild(enemy.sprite);
             enemy.sprite.destroy();
+        }
+
+        if (this.player.isDead()) {
+            this.gameState = 'gameOver';
         }
 
         this.input.clearFrameState();
@@ -343,28 +402,41 @@ export class Game {
         this.app.stage.addChild(this.player.sprite);
     }
 
-    private async createChaser(x: number, y: number) {
-        const texture = await Assets.load(
-            '/assets/png/default/ships/ship_2.png',
-        );
-
-        if (this.destroyed) {
-            return;
-        }
-
-        const chaser = new Enemy(texture, 'chaser');
-
-        chaser.setPosition(x, y);
-
-        this.enemySystem.add(chaser);
-        this.app.stage.addChild(chaser.sprite);
-    }
-
     private destroyApplication() {
         this.app.destroy(true, {
             children: true,
             texture: false,
             textureSource: false,
         });
+    }
+
+    private async spawnEnemy(type: EnemyType) {
+        if (!this.player) {
+            return;
+        }
+
+        const position = this.spawnSystem.findSafePosition(
+            this.app.screen.width,
+            this.app.screen.height,
+            this.player.getPosition(),
+            this.world.obstacles,
+        );
+
+        if (!position) {
+            return;
+        }
+
+        const enemy = await this.enemySystem.create(
+            type,
+            position.x,
+            position.y,
+        );
+
+        if (this.destroyed) {
+            enemy.sprite.destroy();
+            return;
+        }
+
+        this.app.stage.addChild(enemy.sprite);
     }
 }
