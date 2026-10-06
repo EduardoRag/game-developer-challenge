@@ -12,7 +12,6 @@ import { SpawnSystem } from '../systems/SpawnSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
 
 import { Player } from '../entities/Player';
-import { Projectile } from '../entities/Projectile';
 
 import type { EnemyType } from '../entities/Enemy';
 import { InputManager } from '../input/InputManager';
@@ -248,21 +247,12 @@ export class Game {
             this.collisionSystem,
         );
 
-        const projectiles = this.projectileSystem.getProjectiles();
-
-        for (let index = projectiles.length - 1; index >= 0; index--) {
-            const projectile = projectiles[index];
-
-            if (
-                this.isProjectileOutsideArena(projectile) ||
-                this.collisionSystem.isProjectileCollidingWithObstacle(
-                    projectile,
-                    this.world.obstacles,
-                )
-            ) {
-                this.projectileSystem.destroy(index);
-            }
-        }
+        this.projectileSystem.removeInvalidProjectiles(
+            this.app.screen.width,
+            this.app.screen.height,
+            this.world.obstacles,
+            this.collisionSystem,
+        );
 
         const deadEnemies = this.enemySystem.removeDeadEnemies();
 
@@ -276,17 +266,6 @@ export class Game {
         }
 
         this.input.clearFrameState();
-    }
-
-    private isProjectileOutsideArena(projectile: Projectile) {
-        const { x, y } = projectile.sprite;
-
-        return (
-            x < 0 ||
-            x > this.app.screen.width ||
-            y < 0 ||
-            y > this.app.screen.height
-        );
     }
 
     private async createPlayer() {
