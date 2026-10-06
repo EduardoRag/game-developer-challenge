@@ -12,7 +12,10 @@ export const RankingScreen = ({
     const rankingQuery = useRankingQuery();
 
     return (
-        <MenuPanel className="data-screen__content">
+        <MenuPanel
+            className="data-screen__content"
+            panelClassName="data-screen__panel"
+        >
             <h1>Ranking</h1>
 
             {rankingQuery.isPending && (

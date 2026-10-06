@@ -12,7 +12,10 @@ export const HistoryScreen = ({
     const historyQuery = useHistoryQuery();
 
     return (
-        <MenuPanel className="data-screen__content">
+        <MenuPanel
+            className="data-screen__content"
+            panelClassName="data-screen__panel"
+        >
             <h1>History</h1>
 
             {historyQuery.isPending && (

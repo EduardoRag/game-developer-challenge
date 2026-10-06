@@ -987,14 +987,12 @@ body {
 @media (orientation: landscape) and (max-height: 500px) {
   /* Menus */
 
-  .main-menu__panel {
-    transform: scale(0.66);
-    transform-origin: center;
-  }
-
+  .main-menu__panel,
+  .options-screen__panel,
   .pause-menu,
-  .game-over__panel {
-    transform: scale(0.72);
+  .game-over__panel,
+  .data-screen__panel {
+    transform: scale(0.6);
     transform-origin: center;
   }
 
