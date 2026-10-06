@@ -566,6 +566,57 @@ body {
   outline-offset: 2px;
 }
 
+/* Pause */
+
+.pause-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 45%);
+}
+
+.pause-overlay__panel {
+  position: relative;
+  width: min(384px, calc(100vw - 32px));
+  aspect-ratio: 384 / 480;
+}
+
+.pause-overlay__background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.pause-overlay__content {
+  position: absolute;
+  inset: 30px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.pause-overlay__content h1 {
+  margin: 0 0 8px;
+  font-family: var(--font-game);
+  font-size: 34px;
+  color: var(--game-text);
+  text-shadow: 2px 2px 3px rgb(0 0 0 / 60%);
+}
+
+.pause-overlay__content p {
+  margin: 0 0 24px;
+  font-family: var(--font-game);
+  font-weight: 700;
+  color: var(--game-text);
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 60%);
+}
+
 /* Responsive */
 
 @media (max-width: 640px) {

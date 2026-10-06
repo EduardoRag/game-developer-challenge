@@ -119,6 +119,17 @@ export class Game {
         this.emitSnapshot();
 
         this.input.start();
+
+        window.addEventListener(
+            'blur',
+            this.handleWindowBlur,
+        );
+
+        document.addEventListener(
+            'visibilitychange',
+            this.handleVisibilityChange,
+        );
+
         this.app.ticker.add(this.handleTick);
     }
 
@@ -126,6 +137,16 @@ export class Game {
         this.destroyed = true;
 
         this.input.stop();
+
+        window.removeEventListener(
+            'blur',
+            this.handleWindowBlur,
+        );
+
+        document.removeEventListener(
+            'visibilitychange',
+            this.handleVisibilityChange,
+        );
 
         if (this.initialized) {
             this.app.ticker.remove(this.handleTick);
@@ -141,6 +162,14 @@ export class Game {
 
     private update(deltaTime: number) {
         if (!this.player) {
+            return;
+        }
+
+        if (
+            this.gameState === 'playing' &&
+            this.input.wasPressed('Escape')
+        ) {
+            this.pause();
             return;
         }
 
@@ -393,4 +422,34 @@ export class Game {
             this.timeRemaining - deltaTime,
         );
     }
+
+    public pause() {
+        if (this.gameState !== 'playing') {
+            return;
+        }
+
+        this.gameState = 'paused';
+        this.input.clear();
+        this.emitSnapshot();
+    }
+
+    public resume() {
+        if (this.gameState !== 'paused') {
+            return;
+        }
+
+        this.gameState = 'playing';
+        this.input.clear();
+        this.emitSnapshot();
+    }
+
+    private readonly handleWindowBlur = () => {
+        this.pause();
+    };
+
+    private readonly handleVisibilityChange = () => {
+        if (document.hidden) {
+            this.pause();
+        }
+    };
 }

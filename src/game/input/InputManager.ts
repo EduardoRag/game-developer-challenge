@@ -38,4 +38,9 @@ export class InputManager {
     public clearFrameState() {
         this.justPressedKeys.clear();
     }
+
+    public clear() {
+        this.pressedKeys.clear();
+        this.justPressedKeys.clear();
+    }
 }

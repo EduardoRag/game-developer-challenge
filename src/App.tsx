@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { GameCanvas } from './game/rendering/GameCanvas';
 import { GameOver } from './game/rendering/GameOver';
@@ -20,6 +20,8 @@ import { OptionsScreen } from './features/options/OptionsScreen';
 import { loadGameOptions } from './features/options/optionsStorage';
 import type { GameOptions } from './features/options/types';
 
+import { PauseOverlay } from './game/rendering/PauseOverlay';
+
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
   maxHealth: 100,
@@ -33,6 +35,8 @@ const App = () => {
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [gameKey, setGameKey] = useState(0);
   const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
+
+  const resumeGameRef = useRef<(() => void) | null>(null);
 
   const [gameOptions, setGameOptions] = useState<GameOptions>(() => loadGameOptions());
   const [sessionConfig, setSessionConfig] = useState<GameOptions>(() => loadGameOptions());
@@ -92,6 +96,10 @@ const App = () => {
     setScreen('menu');
   };
 
+  const handleGameReady = useCallback((resume: () => void) => {
+    resumeGameRef.current = resume;
+  }, []);
+
   if (screen === 'menu') {
     return (
       <MainMenu
@@ -135,9 +143,16 @@ const App = () => {
         key={gameKey}
         config={sessionConfig}
         onSnapshotChange={handleSnapshotChange}
+        onGameReady={handleGameReady}
       />
 
       <Hud snapshot={snapshot} />
+
+      {snapshot.gameState === 'paused' && (
+        <PauseOverlay
+          onResume={() => resumeGameRef.current?.()}
+        />
+      )}
 
       {snapshot.gameState === 'gameOver' && (
         <GameOver

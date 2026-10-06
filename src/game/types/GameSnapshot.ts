@@ -1,4 +1,7 @@
-export type GameState = 'playing' | 'gameOver';
+export type GameState =
+    | 'playing'
+    | 'paused'
+    | 'gameOver';
 
 export type GameSnapshot = {
     health: number;

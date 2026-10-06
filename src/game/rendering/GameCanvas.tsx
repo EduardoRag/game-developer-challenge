@@ -7,11 +7,13 @@ import type { GameSnapshot } from '../types/GameSnapshot';
 type GameCanvasProps = {
     config: GameSessionConfig;
     onSnapshotChange: (snapshot: GameSnapshot) => void;
+    onGameReady: (resume: () => void) => void;
 };
 
 export const GameCanvas = ({
     config,
     onSnapshotChange,
+    onGameReady,
 }: GameCanvasProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -26,12 +28,14 @@ export const GameCanvas = ({
 
         game.setSnapshotListener(onSnapshotChange);
 
+        onGameReady(() => game.resume());
+
         void game.initialize();
 
         return () => {
             game.destroy();
         };
-    }, [config, onSnapshotChange]);
+    }, [config, onGameReady, onSnapshotChange]);
 
     return <div ref={containerRef} className="game-canvas" />;
 };
