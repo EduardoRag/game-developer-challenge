@@ -471,6 +471,20 @@ body {
 
 /* Options */
 
+.pause-options-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgb(5 15 30 / 48%);
+}
+
 .options-screen__panel {
   width: min(690px, calc(100vw - 48px));
   aspect-ratio: 1 / 0.88;

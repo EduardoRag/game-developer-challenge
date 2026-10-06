@@ -32,14 +32,22 @@ const INITIAL_SNAPSHOT: GameSnapshot = {
 
 const App = () => {
   const createSessionMutation = useCreateSessionMutation();
+
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [gameKey, setGameKey] = useState(0);
-  const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
+  const [snapshot, setSnapshot] =
+    useState<GameSnapshot>(INITIAL_SNAPSHOT);
+  const [isPauseOptionsOpen, setIsPauseOptionsOpen] =
+    useState(false);
 
   const resumeGameRef = useRef<(() => void) | null>(null);
 
-  const [gameOptions, setGameOptions] = useState<GameOptions>(() => loadGameOptions());
-  const [sessionConfig, setSessionConfig] = useState<GameOptions>(() => loadGameOptions());
+  const [gameOptions, setGameOptions] = useState<GameOptions>(() =>
+    loadGameOptions(),
+  );
+
+  const [sessionConfig, setSessionConfig] =
+    useState<GameOptions>(() => loadGameOptions());
 
   const handleSnapshotChange = useCallback(
     (nextSnapshot: GameSnapshot) => {
@@ -49,6 +57,7 @@ const App = () => {
   );
 
   const handlePlay = () => {
+    setIsPauseOptionsOpen(false);
     setSessionConfig({ ...gameOptions });
 
     setSnapshot({
@@ -69,6 +78,7 @@ const App = () => {
   };
 
   const handleRestart = () => {
+    setIsPauseOptionsOpen(false);
     createSessionMutation.reset();
 
     setSnapshot({
@@ -80,6 +90,7 @@ const App = () => {
   };
 
   const handleMainMenu = () => {
+    setIsPauseOptionsOpen(false);
     setSnapshot(INITIAL_SNAPSHOT);
 
     createSessionMutation.reset();
@@ -147,12 +158,32 @@ const App = () => {
 
       <Hud snapshot={snapshot} />
 
-      {snapshot.gameState === 'paused' && (
-        <PauseOverlay
-          onResume={() => resumeGameRef.current?.()}
-          onMainMenu={handleMainMenu}
-        />
-      )}
+      {snapshot.gameState === 'paused' &&
+        !isPauseOptionsOpen && (
+          <PauseOverlay
+            onResume={() =>
+              resumeGameRef.current?.()
+            }
+            onOptions={() =>
+              setIsPauseOptionsOpen(true)
+            }
+            onMainMenu={handleMainMenu}
+          />
+        )}
+
+      {snapshot.gameState === 'paused' &&
+        isPauseOptionsOpen && (
+          <div className="pause-options-overlay">
+            <OptionsScreen
+              options={gameOptions}
+              onSave={handleSaveOptions}
+              onBack={() =>
+                setIsPauseOptionsOpen(false)
+              }
+              backLabel="BACK"
+            />
+          </div>
+        )}
 
       {snapshot.gameState === 'gameOver' && (
         <GameOver

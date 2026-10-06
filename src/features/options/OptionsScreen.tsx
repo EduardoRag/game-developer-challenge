@@ -13,12 +13,14 @@ type OptionsScreenProps = {
     options: GameOptions;
     onSave: (options: GameOptions) => void;
     onBack: () => void;
+    backLabel?: string;
 };
 
 export const OptionsScreen = ({
     options,
     onSave,
     onBack,
+    backLabel = 'MAIN MENU',
 }: OptionsScreenProps) => {
     const updateOptions = (nextOptions: GameOptions) => {
         saveGameOptions(nextOptions);
@@ -149,7 +151,7 @@ export const OptionsScreen = ({
                 className="menu-button options-screen__back"
                 onClick={onBack}
             >
-                MAIN MENU
+                {backLabel}
             </button>
         </MenuPanel>
     );

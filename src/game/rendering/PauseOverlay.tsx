@@ -1,10 +1,12 @@
 type PauseOverlayProps = {
     onResume: () => void;
+    onOptions: () => void;
     onMainMenu: () => void;
 };
 
 export const PauseOverlay = ({
     onResume,
+    onOptions,
     onMainMenu,
 }: PauseOverlayProps) => {
     return (
@@ -45,7 +47,7 @@ export const PauseOverlay = ({
                         <button
                             type="button"
                             className="menu-button"
-                            aria-disabled="true"
+                            onClick={onOptions}
                         >
                             OPTIONS
                         </button>
