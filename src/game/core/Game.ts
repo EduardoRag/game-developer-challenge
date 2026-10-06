@@ -14,11 +14,9 @@ import { Player } from '../entities/Player';
 import { GAME_CONFIG } from '../config/gameConfig';
 
 import type { EnemyType } from '../entities/Enemy';
-import type { GameSnapshot } from '../types/GameSnapshot';
+import type { GameSnapshot, GameState } from '../types/GameSnapshot';
 
 import { InputManager } from '../input/InputManager';
-
-type GameState = 'playing' | 'gameOver';
 
 export class Game {
     private readonly app: Application;
@@ -147,7 +145,6 @@ export class Game {
         this.updateProjectiles(deltaTime);
 
         this.destroyDeadEnemies();
-        this.emitSnapshot();
 
         if (
             this.player.isDead() ||
@@ -155,6 +152,8 @@ export class Game {
         ) {
             this.gameState = 'gameOver';
         }
+
+        this.emitSnapshot();
 
         this.input.clearFrameState();
     }
@@ -358,6 +357,7 @@ export class Game {
             maxHealth: GAME_CONFIG.player.maxHealth,
             score: this.score,
             timeRemaining: Math.ceil(this.timeRemaining),
+            gameState: this.gameState,
         };
 
         if (
@@ -365,7 +365,8 @@ export class Game {
             this.lastSnapshot.health === snapshot.health &&
             this.lastSnapshot.maxHealth === snapshot.maxHealth &&
             this.lastSnapshot.score === snapshot.score &&
-            this.lastSnapshot.timeRemaining === snapshot.timeRemaining
+            this.lastSnapshot.timeRemaining === snapshot.timeRemaining &&
+            this.lastSnapshot.gameState === snapshot.gameState
         ) {
             return;
         }
