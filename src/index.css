@@ -1036,4 +1036,38 @@ body {
     transform: scale(0.65);
     transform-origin: top right;
   }
+
+  .game-over__panel {
+    width: min(560px, calc(100vw - 32px));
+    height: calc(100vh - 16px);
+    max-height: 360px;
+    transform: none;
+  }
+
+  .game-over__content {
+    inset: 5% 10%;
+    justify-content: center;
+  }
+
+  .game-over__content h1 {
+    margin-top: 16px;
+    font-size: 24px;
+  }
+
+  .game-over__score {
+    margin: 4px 0;
+    font-size: 42px;
+  }
+
+  .game-over__details {
+    margin: 0 0 8px;
+    font-size: 10px;
+  }
+
+  .game-over__actions {
+    gap: 0;
+    transform: scale(0.68);
+    transform-origin: center;
+    margin: -18px 0;
+  }
 }
