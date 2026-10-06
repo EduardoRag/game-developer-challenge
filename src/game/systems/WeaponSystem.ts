@@ -4,6 +4,7 @@ import type { Texture } from 'pixi.js';
 
 import { Player } from '../entities/Player';
 import { Projectile } from '../entities/Projectile';
+import type { InputManager } from '../input/InputManager';
 import { ProjectileSystem } from './ProjectileSystem';
 
 export class WeaponSystem {
@@ -151,5 +152,58 @@ export class WeaponSystem {
             player.getRightPosition(),
             player.getRightDirection(),
         );
+    }
+
+    public handlePlayerInput(
+        player: Player,
+        input: InputManager,
+        projectileTexture: Texture,
+        projectileSystem: ProjectileSystem,
+    ) {
+        const projectiles: Projectile[] = [];
+
+        if (
+            input.wasPressed('Space') &&
+            this.canFireFront()
+        ) {
+            const projectile = this.fireFront(
+                player,
+                projectileTexture,
+                projectileSystem,
+            );
+
+            projectiles.push(projectile);
+            this.startFrontCooldown();
+        }
+
+        if (
+            input.wasPressed('KeyQ') &&
+            this.canFireLeftBroadside()
+        ) {
+            const broadsideProjectiles = this.fireLeftBroadside(
+                player,
+                projectileTexture,
+                projectileSystem,
+            );
+
+            projectiles.push(...broadsideProjectiles);
+            this.startLeftBroadsideCooldown();
+        }
+
+        if (
+            input.wasPressed('KeyE') &&
+            this.canFireRightBroadside()
+        ) {
+            const broadsideProjectiles = this.fireRightBroadside(
+                player,
+                projectileTexture,
+                projectileSystem,
+            );
+
+            projectiles.push(...broadsideProjectiles);
+            this.startRightBroadsideCooldown();
+        }
+
+        return projectiles;
     }
 }

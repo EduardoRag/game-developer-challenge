@@ -224,55 +224,17 @@ export class Game {
             deltaTime,
         );
 
-        if (
-            this.input.wasPressed('Space') &&
-            this.weaponSystem.canFireFront() &&
-            this.projectileTexture
-        ) {
-            const projectile = this.weaponSystem.fireFront(
+        if (this.projectileTexture) {
+            const newProjectiles = this.weaponSystem.handlePlayerInput(
                 this.player,
+                this.input,
                 this.projectileTexture,
                 this.projectileSystem,
             );
 
-            this.app.stage.addChild(projectile.sprite);
-            this.weaponSystem.startFrontCooldown();
-        }
-
-        if (
-            this.input.wasPressed('KeyQ') &&
-            this.weaponSystem.canFireLeftBroadside() &&
-            this.projectileTexture
-        ) {
-            const projectiles = this.weaponSystem.fireLeftBroadside(
-                this.player,
-                this.projectileTexture,
-                this.projectileSystem,
-            );
-
-            for (const projectile of projectiles) {
+            for (const projectile of newProjectiles) {
                 this.app.stage.addChild(projectile.sprite);
             }
-
-            this.weaponSystem.startLeftBroadsideCooldown();
-        }
-
-        if (
-            this.input.wasPressed('KeyE') &&
-            this.weaponSystem.canFireRightBroadside() &&
-            this.projectileTexture
-        ) {
-            const projectiles = this.weaponSystem.fireRightBroadside(
-                this.player,
-                this.projectileTexture,
-                this.projectileSystem,
-            );
-
-            for (const projectile of projectiles) {
-                this.app.stage.addChild(projectile.sprite);
-            }
-
-            this.weaponSystem.startRightBroadsideCooldown();
         }
 
         this.projectileSystem.update(deltaTime);
