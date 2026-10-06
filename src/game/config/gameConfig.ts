@@ -11,6 +11,10 @@ export const GAME_CONFIG = {
     },
 
     enemy: {
+        spawn: {
+            interval: 5,
+        },
+
         chaser: {
             maxHealth: 50,
             moveSpeed: 100,
