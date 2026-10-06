@@ -55,7 +55,7 @@ export class CombatSystem {
         }
     }
 
-    public resolveChaserContactDamage(
+    private resolveChaserContactDamage(
         enemy: Enemy,
         player: Player,
         collisionSystem: CollisionSystem,
@@ -80,5 +80,25 @@ export class CombatSystem {
         enemy.startContactDamageCooldown(
             GAME_CONFIG.enemy.chaser.contactDamageCooldown,
         );
+    }
+
+    public resolveChaserContacts(
+        enemies: Enemy[],
+        player: Player,
+        collisionSystem: CollisionSystem,
+        deltaTime: number,
+    ) {
+        for (const enemy of enemies) {
+            if (enemy.type !== 'chaser') {
+                continue;
+            }
+
+            this.resolveChaserContactDamage(
+                enemy,
+                player,
+                collisionSystem,
+                deltaTime,
+            );
+        }
     }
 }

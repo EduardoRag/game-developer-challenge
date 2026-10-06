@@ -129,71 +129,31 @@ export class Game {
 
         const enemies = this.enemySystem.getEnemies();
 
-        for (const enemy of enemies) {
-            if (enemy.type === 'chaser') {
-                const previousPosition = enemy.getPosition();
+        const shootersReadyToFire = this.enemySystem.update(
+            this.player,
+            this.collisionSystem,
+            this.world.obstacles,
+            deltaTime,
+        );
 
-                this.enemySystem.updateChaser(
-                    enemy,
-                    this.player,
-                    deltaTime,
-                );
+        this.combatSystem.resolveChaserContacts(
+            enemies,
+            this.player,
+            this.collisionSystem,
+            deltaTime,
+        );
 
-                if (
-                    this.collisionSystem.isEnemyCollidingWithObstacle(
-                        enemy,
-                        this.world.obstacles,
-                    )
-                ) {
-                    enemy.setPosition(
-                        previousPosition.x,
-                        previousPosition.y,
-                    );
-                }
+        if (this.projectileTexture) {
+            const enemyProjectiles = this.enemySystem.fireShooters(
+                shootersReadyToFire,
+                this.player,
+                this.projectileTexture,
+                this.projectileSystem,
+            );
 
-                this.combatSystem.resolveChaserContactDamage(
-                    enemy,
-                    this.player,
-                    this.collisionSystem,
-                    deltaTime,
-                );
+            for (const projectile of enemyProjectiles) {
+                this.app.stage.addChild(projectile.sprite);
             }
-
-            if (enemy.type === 'shooter') {
-                const previousPosition = enemy.getPosition();
-
-                const canFire = this.enemySystem.updateShooter(
-                    enemy,
-                    this.player,
-                    deltaTime,
-                );
-
-                if (
-                    this.collisionSystem.isEnemyCollidingWithObstacle(
-                        enemy,
-                        this.world.obstacles,
-                    )
-                ) {
-                    enemy.setPosition(
-                        previousPosition.x,
-                        previousPosition.y,
-                    );
-                }
-
-                if (canFire && this.projectileTexture) {
-                    const projectile = this.enemySystem.fireAtPlayer(
-                        enemy,
-                        this.player,
-                        this.projectileTexture,
-                        this.projectileSystem,
-                    );
-
-                    if (projectile) {
-                        this.app.stage.addChild(projectile.sprite);
-                    }
-                }
-            }
-
         }
 
         this.weaponSystem.update(deltaTime);
@@ -237,12 +197,7 @@ export class Game {
             this.collisionSystem,
         );
 
-        const deadEnemies = this.enemySystem.removeDeadEnemies();
-
-        for (const enemy of deadEnemies) {
-            this.app.stage.removeChild(enemy.sprite);
-            enemy.sprite.destroy();
-        }
+        this.enemySystem.destroyDeadEnemies();
 
         if (this.player.isDead()) {
             this.gameState = 'gameOver';

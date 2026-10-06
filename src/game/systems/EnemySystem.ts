@@ -6,6 +6,7 @@ import { Enemy, type EnemyType } from '../entities/Enemy';
 import { Player } from '../entities/Player';
 
 import { Projectile } from '../entities/Projectile';
+import { CollisionSystem } from './CollisionSystem';
 import { ProjectileSystem } from './ProjectileSystem';
 
 
@@ -41,7 +42,7 @@ export class EnemySystem {
         this.enemies.push(enemy);
     }
 
-    public updateChaser(
+    private updateChaser(
         enemy: Enemy,
         player: Player,
         deltaTime: number,
@@ -59,7 +60,7 @@ export class EnemySystem {
         );
     }
 
-    public updateShooter(
+    private updateShooter(
         enemy: Enemy,
         player: Player,
         deltaTime: number,
@@ -107,24 +108,7 @@ export class EnemySystem {
         );
     }
 
-    public removeDeadEnemies() {
-        const removedEnemies: Enemy[] = [];
-
-        for (let index = this.enemies.length - 1; index >= 0; index--) {
-            const enemy = this.enemies[index];
-
-            if (!enemy.isDead()) {
-                continue;
-            }
-
-            this.enemies.splice(index, 1);
-            removedEnemies.push(enemy);
-        }
-
-        return removedEnemies;
-    }
-
-    public fireAtPlayer(
+    private fireAtPlayer(
         enemy: Enemy,
         player: Player,
         projectileTexture: Texture,
@@ -165,5 +149,154 @@ export class EnemySystem {
         );
 
         return projectile;
+    }
+
+    public updateChaserBehavior(
+        enemy: Enemy,
+        player: Player,
+        collisionSystem: CollisionSystem,
+        obstacles: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        }[],
+        deltaTime: number,
+    ) {
+        const previousPosition = enemy.getPosition();
+
+        this.updateChaser(enemy, player, deltaTime);
+
+        if (
+            collisionSystem.isEnemyCollidingWithObstacle(
+                enemy,
+                obstacles,
+            )
+        ) {
+            enemy.setPosition(
+                previousPosition.x,
+                previousPosition.y,
+            );
+        }
+    }
+
+    public updateShooterBehavior(
+        enemy: Enemy,
+        player: Player,
+        collisionSystem: CollisionSystem,
+        obstacles: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        }[],
+        deltaTime: number,
+    ) {
+        const previousPosition = enemy.getPosition();
+
+        const canFire = this.updateShooter(
+            enemy,
+            player,
+            deltaTime,
+        );
+
+        if (
+            collisionSystem.isEnemyCollidingWithObstacle(
+                enemy,
+                obstacles,
+            )
+        ) {
+            enemy.setPosition(
+                previousPosition.x,
+                previousPosition.y,
+            );
+        }
+
+        return canFire;
+    }
+
+    public update(
+        player: Player,
+        collisionSystem: CollisionSystem,
+        obstacles: {
+            x: number;
+            y: number;
+            width: number;
+            height: number;
+        }[],
+        deltaTime: number,
+    ) {
+        const shootersReadyToFire: Enemy[] = [];
+
+        for (const enemy of this.enemies) {
+            switch (enemy.type) {
+                case 'chaser':
+                    this.updateChaserBehavior(
+                        enemy,
+                        player,
+                        collisionSystem,
+                        obstacles,
+                        deltaTime,
+                    );
+                    break;
+
+                case 'shooter': {
+                    const canFire = this.updateShooterBehavior(
+                        enemy,
+                        player,
+                        collisionSystem,
+                        obstacles,
+                        deltaTime,
+                    );
+
+                    if (canFire) {
+                        shootersReadyToFire.push(enemy);
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        return shootersReadyToFire;
+    }
+
+    public destroyDeadEnemies() {
+        for (let index = this.enemies.length - 1; index >= 0; index--) {
+            const enemy = this.enemies[index];
+
+            if (!enemy.isDead()) {
+                continue;
+            }
+
+            enemy.sprite.removeFromParent();
+            enemy.sprite.destroy();
+
+            this.enemies.splice(index, 1);
+        }
+    }
+
+    public fireShooters(
+        shooters: Enemy[],
+        player: Player,
+        projectileTexture: Texture,
+        projectileSystem: ProjectileSystem,
+    ) {
+        const projectiles: Projectile[] = [];
+
+        for (const shooter of shooters) {
+            const projectile = this.fireAtPlayer(
+                shooter,
+                player,
+                projectileTexture,
+                projectileSystem,
+            );
+
+            if (projectile) {
+                projectiles.push(projectile);
+            }
+        }
+
+        return projectiles;
     }
 }
