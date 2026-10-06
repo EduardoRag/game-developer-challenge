@@ -5,6 +5,7 @@ import { GAME_CONFIG } from '../config/gameConfig';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
 import { EnemySystem } from '../systems/EnemySystem';
+import { PlayerSystem } from '../systems/PlayerSystem';
 import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
@@ -28,6 +29,7 @@ export class Game {
     private readonly weaponSystem = new WeaponSystem();
     private readonly enemySystem = new EnemySystem();
     private readonly spawnSystem = new SpawnSystem();
+    private readonly playerSystem = new PlayerSystem();
 
     private chaserContactCooldown = 0;
 
@@ -212,43 +214,14 @@ export class Game {
             this.chaserContactCooldown - deltaTime,
         );
 
-        if (this.input.isPressed('KeyA', 'ArrowLeft')) {
-            this.player.rotate(-1, deltaTime);
-        }
-
-        if (this.input.isPressed('KeyD', 'ArrowRight')) {
-            this.player.rotate(1, deltaTime);
-        }
-
-        if (this.input.isPressed('KeyW', 'ArrowUp')) {
-            const movement = this.player.getForwardMovement(deltaTime);
-
-            this.player.move(movement.x, 0);
-
-            if (
-                this.collisionSystem.isPlayerCollidingWithObstacle(
-                    this.player,
-                    this.world.obstacles,
-                )
-            ) {
-                this.player.move(-movement.x, 0);
-            }
-
-            this.player.move(0, movement.y);
-
-            if (
-                this.collisionSystem.isPlayerCollidingWithObstacle(
-                    this.player,
-                    this.world.obstacles,
-                )
-            ) {
-                this.player.move(0, -movement.y);
-            }
-        }
-
-        this.player.constrainToBounds(
+        this.playerSystem.updateMovement(
+            this.player,
+            this.input,
+            this.collisionSystem,
+            this.world.obstacles,
             this.app.screen.width,
             this.app.screen.height,
+            deltaTime,
         );
 
         if (
