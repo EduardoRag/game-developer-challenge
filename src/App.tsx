@@ -238,6 +238,7 @@ const App = () => {
     return (
       <RankingScreen
         onBack={() => setScreen('menu')}
+        onHistory={() => setScreen('history')}
       />
     );
   }
@@ -246,6 +247,7 @@ const App = () => {
     return (
       <HistoryScreen
         onBack={() => setScreen('menu')}
+        onRanking={() => setScreen('ranking')}
       />
     );
   }

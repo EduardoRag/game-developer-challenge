@@ -1,22 +1,101 @@
+import { useState } from 'react';
+
 import { MenuPanel } from '../../shared/components/MenuPanel';
 
 import { useHistoryQuery } from './queries';
 
+import { Pagination } from '../../shared/components/Pagination';
+
 type HistoryScreenProps = {
     onBack: () => void;
+    onRanking: () => void;
+};
+
+const PAGE_SIZE = 5;
+
+const formatDate = (playedAt: string) => {
+    const date = new Date(playedAt);
+
+    const day = date
+        .getDate()
+        .toString()
+        .padStart(2, '0');
+
+    const month = date
+        .toLocaleString('en-US', {
+            month: 'short',
+        })
+        .toUpperCase();
+
+    const hours = date
+        .getHours()
+        .toString()
+        .padStart(2, '0');
+
+    const minutes = date
+        .getMinutes()
+        .toString()
+        .padStart(2, '0');
+
+    return `${day} ${month} · ${hours}:${minutes}`;
+};
+
+const formatDuration = (duration: number) => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+
+    return `${minutes
+        .toString()
+        .padStart(2, '0')}:${seconds
+            .toString()
+            .padStart(2, '0')}`;
 };
 
 export const HistoryScreen = ({
     onBack,
+    onRanking,
 }: HistoryScreenProps) => {
-    const historyQuery = useHistoryQuery();
+    const [page, setPage] = useState(1);
+
+    const historyQuery = useHistoryQuery(page, PAGE_SIZE);
+
+    const totalPages = historyQuery.data
+        ? Math.max(
+            1,
+            Math.ceil(
+                historyQuery.data.total / PAGE_SIZE,
+            ),
+        )
+        : 1;
 
     return (
         <MenuPanel
             className="data-screen__content"
             panelClassName="data-screen__panel"
         >
-            <h1>History</h1>
+            <h1>CAPTAIN'S LOG</h1>
+
+            <div
+                className="data-screen__tabs"
+                role="navigation"
+                aria-label="Captain's log sections"
+            >
+                <button
+                    type="button"
+                    className="data-screen__tab"
+                    onClick={onRanking}
+                >
+                    RANKING
+                </button>
+
+                <button
+                    type="button"
+                    className="data-screen__tab data-screen__tab--active"
+                    aria-current="page"
+                >
+                    MATCH HISTORY
+                </button>
+            </div>
 
             {historyQuery.isPending && (
                 <p>Loading history...</p>
@@ -28,9 +107,12 @@ export const HistoryScreen = ({
 
                     <button
                         type="button"
-                        onClick={() => historyQuery.refetch()}
+                        className="menu-button"
+                        onClick={() =>
+                            historyQuery.refetch()
+                        }
                     >
-                        Try Again
+                        TRY AGAIN
                     </button>
                 </div>
             )}
@@ -42,26 +124,59 @@ export const HistoryScreen = ({
 
             {historyQuery.isSuccess &&
                 historyQuery.data.items.length > 0 && (
-                    <ul className="history-list">
-                        {historyQuery.data.items.map((entry) => (
-                            <li
-                                key={entry.id}
-                                className="history-list__item"
+                    <>
+                        <div className="history-table">
+                            <div
+                                className="history-table__header"
+                                aria-hidden="true"
                             >
-                                <div>
-                                    <strong>{entry.playerName}</strong>
+                                <span>DATE</span>
+                                <span>POINTS</span>
+                                <span>DURATION</span>
+                                <span>RESULT</span>
+                            </div>
 
-                                    <span>
-                                        Score: {entry.score}
-                                    </span>
-                                </div>
+                            <ul className="history-list">
+                                {historyQuery.data.items.map(
+                                    (entry) => (
+                                        <li
+                                            key={entry.id}
+                                            className="history-list__item"
+                                        >
+                                            <span>
+                                                {formatDate(
+                                                    entry.playedAt,
+                                                )}
+                                            </span>
 
-                                <span>
-                                    {entry.duration}s
-                                </span>
-                            </li>
-                        ))}
-                    </ul>
+                                            <strong>
+                                                {entry.score}
+                                            </strong>
+
+                                            <span>
+                                                {formatDuration(
+                                                    entry.duration,
+                                                )}
+                                            </span>
+
+                                            <span>
+                                                {entry.endReason ===
+                                                    'timeUp'
+                                                    ? 'TIME UP'
+                                                    : 'DEFEATED'}
+                                            </span>
+                                        </li>
+                                    ),
+                                )}
+                            </ul>
+                        </div>
+
+                        <Pagination
+                            page={page}
+                            totalPages={totalPages}
+                            onPageChange={setPage}
+                        />
+                    </>
                 )}
 
             <button
@@ -69,7 +184,7 @@ export const HistoryScreen = ({
                 className="menu-button data-screen__back"
                 onClick={onBack}
             >
-                Back
+                MAIN MENU
             </button>
         </MenuPanel>
     );
