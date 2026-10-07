@@ -4,6 +4,12 @@ Jogo de batalha naval 2D com visão top-down desenvolvido com **React, TypeScrip
 
 O projeto combina uma interface construída em React com uma camada de gameplay em PixiJS, incluindo combate naval, diferentes comportamentos de inimigos, partidas configuráveis, controles responsivos, APIs simuladas, ranking, histórico de partidas, testes end-to-end e regressão visual.
 
+## 🎮 Jogar
+
+**Deploy:** https://pirate-battle-sand.vercel.app/
+
+A versão publicada utiliza a API simulada com MSW e pode ser executada sem depender de um backend externo.
+
 ## Tecnologias
 
 - React 19
@@ -577,16 +583,6 @@ Essa instrumentação controla apenas o estado necessário para preparar cenári
 - A identidade do jogador utiliza atualmente o jogador de demonstração `Captain Jack`.
 - A experiência mobile de gameplay é otimizada para orientação landscape.
 - As medições de performance dependem de hardware, navegador, taxa de atualização da tela e ferramentas de desenvolvimento utilizadas.
-
-## Deploy
-
-URL da aplicação:
-
-```text
-Será adicionada após o deploy.
-```
-
-A versão publicada mantém a API simulada para que a aplicação possa ser avaliada sem depender de um backend externo.
 
 ## Scripts disponíveis
 
