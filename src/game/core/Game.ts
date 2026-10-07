@@ -445,6 +445,12 @@ export class Game {
 
             this.app.stage.addChild(enemy.sprite);
 
+            this.enemySystem.createDamageEffect(
+                enemy,
+                this.app.stage,
+                this.gameplayScale,
+            );
+
             const healthBar = this.enemySystem.getHealthBar(enemy);
 
             if (healthBar) {

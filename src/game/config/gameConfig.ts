@@ -37,7 +37,7 @@ export const GAME_CONFIG = {
 
     projectile: {
         speed: 500,
-        playerDamage: 25,
+        playerDamage: 15,
         enemyDamage: 15,
     },
 

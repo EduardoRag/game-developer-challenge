@@ -31,11 +31,13 @@ export class ShipDamageEffect {
         this.fire.visible = true;
 
         if (healthPercentage > 0.3) {
-            this.fire.alpha = 0.65;
+            this.fire.alpha = 0.7;
+            this.fire.scale.set(1);
             return;
         }
 
         this.fire.alpha = 1;
+        this.fire.scale.set(1.5);
     }
 
     public destroy() {

@@ -1,4 +1,4 @@
-import { Assets, type Texture } from 'pixi.js';
+import { Assets, type Container, type Texture } from 'pixi.js';
 
 import { GAME_CONFIG } from '../config/gameConfig';
 
@@ -10,10 +10,12 @@ import { CollisionSystem } from './CollisionSystem';
 import { ProjectileSystem } from './ProjectileSystem';
 
 import { EnemyHealthBar } from '../rendering/EnemyHealthBar';
+import { ShipDamageEffect } from '../rendering/ShipDamageEffect';
 
 export class EnemySystem {
     private readonly enemies: Enemy[] = [];
     private readonly healthBars = new Map<Enemy, EnemyHealthBar>();
+    private readonly damageEffects = new Map<Enemy, ShipDamageEffect>();
 
     public async create(
         type: EnemyType,
@@ -43,6 +45,16 @@ export class EnemySystem {
 
     public getEnemies() {
         return this.enemies;
+    }
+
+    public createDamageEffect(
+        enemy: Enemy,
+        container: Container,
+        scale = 1,
+    ) {
+        const effect = new ShipDamageEffect(container, scale);
+
+        this.damageEffects.set(enemy, effect);
     }
 
     public add(enemy: Enemy) {
@@ -267,6 +279,18 @@ export class EnemySystem {
 
         for (const enemy of this.enemies) {
             this.healthBars.get(enemy)?.update();
+
+            const damageEffect = this.damageEffects.get(enemy);
+
+            if (damageEffect) {
+                const position = enemy.getPosition();
+
+                damageEffect.update(
+                    position.x,
+                    position.y,
+                    enemy.getHealthPercentage(),
+                );
+            }
         }
 
         return shootersReadyToFire;
@@ -283,6 +307,11 @@ export class EnemySystem {
 
         healthBar?.destroy();
         this.healthBars.delete(enemy);
+
+        const damageEffect = this.damageEffects.get(enemy);
+
+        damageEffect?.destroy();
+        this.damageEffects.delete(enemy);
 
         enemy.sprite.removeFromParent();
         enemy.sprite.destroy();
