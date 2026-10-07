@@ -98,6 +98,7 @@ export class Game {
             : 1;
 
         this.gameplayScale = gameplayScale;
+        this.weaponSystem.setGameplayScale(gameplayScale);
 
         await this.world.initialize(
             this.app.screen.width,

@@ -9,12 +9,14 @@ export class Projectile {
 
     private readonly directionX: number;
     private readonly directionY: number;
+    private readonly gameplayScale: number;
 
     constructor(
         texture: Texture,
         directionX: number,
         directionY: number,
         owner: ProjectileOwner,
+        gameplayScale = 1,
     ) {
         this.sprite = new Sprite(texture);
         this.sprite.anchor.set(0.5);
@@ -22,10 +24,11 @@ export class Projectile {
         this.directionX = directionX;
         this.directionY = directionY;
         this.owner = owner;
+        this.gameplayScale = gameplayScale;
     }
 
     public update(deltaTime: number) {
-        const distance = GAME_CONFIG.projectile.speed * deltaTime;
+        const distance = GAME_CONFIG.projectile.speed * this.gameplayScale * deltaTime;
 
         this.sprite.x += this.directionX * distance;
         this.sprite.y += this.directionY * distance;

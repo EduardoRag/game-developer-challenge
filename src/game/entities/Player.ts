@@ -11,6 +11,8 @@ export class Player {
 
     private health: number = GAME_CONFIG.player.maxHealth;
 
+    private readonly gameplayScale: number;
+
     constructor(
         normalTexture: Texture,
         damagedTexture: Texture,
@@ -22,6 +24,7 @@ export class Player {
 
         this.sprite.anchor.set(0.5);
         this.sprite.scale.set(scale);
+        this.gameplayScale = scale;
 
         this.damagedTexture = damagedTexture;
         this.criticalTexture = criticalTexture;
@@ -72,7 +75,7 @@ export class Player {
     }
 
     public getForwardMovement(deltaTime: number) {
-        const distance = GAME_CONFIG.player.moveSpeed * deltaTime;
+        const distance = GAME_CONFIG.player.moveSpeed * this.gameplayScale * deltaTime;
         const direction = this.sprite.rotation + Math.PI / 2;
 
         return {

@@ -8,9 +8,15 @@ import type { InputManager } from '../input/InputManager';
 import { ProjectileSystem } from './ProjectileSystem';
 
 export class WeaponSystem {
+    private gameplayScale = 1;
+
     private frontCooldown = 0;
     private leftBroadsideCooldown = 0;
     private rightBroadsideCooldown = 0;
+
+    public setGameplayScale(scale: number) {
+        this.gameplayScale = scale;
+    }
 
     public update(deltaTime: number) {
         this.frontCooldown = Math.max(
@@ -73,6 +79,7 @@ export class WeaponSystem {
             direction.x,
             direction.y,
             'player',
+            this.gameplayScale,
         );
 
         projectile.sprite.position.set(position.x, position.y);
@@ -91,7 +98,7 @@ export class WeaponSystem {
     ) {
         const forwardDirection = player.getForwardDirection();
 
-        const spacing = 20;
+        const spacing = 20 * this.gameplayScale;
         const spread = 0.2;
 
         const shots = [
@@ -116,6 +123,7 @@ export class WeaponSystem {
                 directionX / length,
                 directionY / length,
                 'player',
+                this.gameplayScale,
             );
 
             projectile.sprite.position.set(

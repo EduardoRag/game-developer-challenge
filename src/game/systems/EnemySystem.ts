@@ -14,6 +14,7 @@ import { ShipDamageEffect } from '../rendering/ShipDamageEffect';
 
 export class EnemySystem {
     private readonly enemies: Enemy[] = [];
+    private gameplayScale = 1;
     private readonly healthBars = new Map<Enemy, EnemyHealthBar>();
     private readonly damageEffects = new Map<Enemy, ShipDamageEffect>();
 
@@ -23,6 +24,8 @@ export class EnemySystem {
         y: number,
         scale = 1,
     ) {
+        this.gameplayScale = scale;
+
         const texturePaths = type === 'chaser'
             ? {
                 normal: '/assets/png/default/ships/ship_1.png',
@@ -101,7 +104,7 @@ export class EnemySystem {
 
         enemy.moveForward(
             deltaTime,
-            GAME_CONFIG.enemy.chaser.moveSpeed,
+            GAME_CONFIG.enemy.chaser.moveSpeed * this.gameplayScale,
         );
     }
 
@@ -124,31 +127,33 @@ export class EnemySystem {
 
         if (
             distanceToPlayer >
-            GAME_CONFIG.enemy.shooter.preferredDistance
+            GAME_CONFIG.enemy.shooter.preferredDistance * this.gameplayScale
         ) {
             enemy.moveForward(
                 deltaTime,
-                GAME_CONFIG.enemy.shooter.moveSpeed,
+                GAME_CONFIG.enemy.shooter.moveSpeed * this.gameplayScale
             );
 
             return (
-                distanceToPlayer <= GAME_CONFIG.enemy.shooter.fireRange &&
+                distanceToPlayer <=
+                GAME_CONFIG.enemy.shooter.fireRange * this.gameplayScale &&
                 enemy.canFire()
             );
         }
 
         if (
             distanceToPlayer <
-            GAME_CONFIG.enemy.shooter.minDistance
+            GAME_CONFIG.enemy.shooter.minDistance * this.gameplayScale
         ) {
             enemy.moveForward(
                 deltaTime,
-                -GAME_CONFIG.enemy.shooter.moveSpeed,
+                -GAME_CONFIG.enemy.shooter.moveSpeed * this.gameplayScale
             );
         }
 
         return (
-            distanceToPlayer <= GAME_CONFIG.enemy.shooter.fireRange &&
+            distanceToPlayer <=
+            GAME_CONFIG.enemy.shooter.fireRange * this.gameplayScale &&
             enemy.canFire()
         );
     }
@@ -178,6 +183,7 @@ export class EnemySystem {
             directionX,
             directionY,
             'enemy',
+            this.gameplayScale,
         );
 
         const spawnDistance = enemy.sprite.height / 2;
