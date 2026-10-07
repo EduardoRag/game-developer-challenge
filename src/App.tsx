@@ -40,6 +40,13 @@ import type { GameControlsApi } from './game/types/GameControls';
 
 import { ControlsScreen } from './features/controls/ControlsScreen';
 
+const jungleGamingLogo = (
+  <img
+    className="jungle-gaming-logo"
+    src="/assets/logo_jungle_gaming.svg"
+    alt="Jungle Gaming"
+  />
+);
 
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
@@ -243,13 +250,17 @@ const App = () => {
 
   if (screen === 'menu') {
     return (
-      <MainMenu
-        onPlay={handlePlay}
-        onOptions={handleOptions}
-        onRanking={handleRanking}
-        onHistory={handleHistory}
-        onControls={handleControls}
-      />
+      <>
+        <MainMenu
+          onPlay={handlePlay}
+          onOptions={handleOptions}
+          onRanking={handleRanking}
+          onHistory={handleHistory}
+          onControls={handleControls}
+        />
+
+        {jungleGamingLogo}
+      </>
     );
   }
 
@@ -291,6 +302,8 @@ const App = () => {
 
   return (
     <>
+      {jungleGamingLogo}
+
       <GameCanvas
         key={gameKey}
         config={sessionConfig}

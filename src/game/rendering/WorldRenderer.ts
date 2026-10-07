@@ -53,7 +53,13 @@ export class WorldRenderer {
         height: number,
         scale: number,
     ) {
-        const tileNumbers = [
+        const underwaterTileNumbers = [
+            [10, 11, 12],
+            [26, 27, 28],
+            [42, 43, 44],
+        ];
+
+        const islandTileNumbers = [
             [1, 2, 3],
             [17, 18, 19],
             [33, 34, 35],
@@ -80,25 +86,47 @@ export class WorldRenderer {
             height: islandSize - collisionPadding * 2,
         });
 
-        for (let row = 0; row < tileNumbers.length; row++) {
-            for (let column = 0; column < tileNumbers[row].length; column++) {
-                const tileNumber = tileNumbers[row][column];
+        const renderTiles = async (
+            tileNumbers: number[][],
+            alpha = 1,
+            layerScale = 1,
+        ) => {
+            const tileSize = GAME_CONFIG.world.tileSize * scale;
+            const scaledTileSize = tileSize * layerScale;
 
-                const texture = await Assets.load(
-                    `/assets/png/default/tiles/tile_${tileNumber}.png`,
-                );
+            const layerOffset =
+                (tileSize * tileNumbers.length -
+                    scaledTileSize * tileNumbers.length) /
+                2;
 
-                const tile = new Sprite(texture);
+            for (let row = 0; row < tileNumbers.length; row++) {
+                for (
+                    let column = 0;
+                    column < tileNumbers[row].length;
+                    column++
+                ) {
+                    const tileNumber = tileNumbers[row][column];
 
-                tile.scale.set(scale);
+                    const texture = await Assets.load(
+                        `/assets/png/default/tiles/tile_${tileNumber}.png`,
+                    );
 
-                tile.position.set(
-                    startX + column * texture.width * scale,
-                    startY + row * texture.height * scale,
-                );
+                    const tile = new Sprite(texture);
 
-                this.container.addChild(tile);
+                    tile.scale.set(scale * layerScale);
+                    tile.alpha = alpha;
+
+                    tile.position.set(
+                        startX + layerOffset + column * scaledTileSize,
+                        startY + layerOffset + row * scaledTileSize,
+                    );
+
+                    this.container.addChild(tile);
+                }
             }
-        }
+        };
+
+        await renderTiles(underwaterTileNumbers, 0.95, 1.5);
+        await renderTiles(islandTileNumbers);
     }
 }

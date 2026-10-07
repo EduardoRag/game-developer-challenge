@@ -1681,3 +1681,24 @@ body {
   font-weight: 700;
   text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
 }
+
+.jungle-gaming-logo {
+  position: fixed;
+  right: 24px;
+  bottom: 150px;
+  z-index: 20;
+
+  width: clamp(80px, 9vw, 120px);
+  height: auto;
+
+  pointer-events: none;
+  user-select: none;
+}
+
+@media (max-width: 900px) and (max-height: 500px) {
+  .jungle-gaming-logo {
+    right: 16px;
+    bottom: 115px;
+    width: 72px;
+  }
+}
