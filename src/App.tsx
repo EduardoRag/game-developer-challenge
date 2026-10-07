@@ -5,7 +5,11 @@ import {
   useState,
 } from 'react';
 
-import { loadPendingSession, savePendingSession } from './features/history/sessionStorage';
+import {
+  loadPendingSession,
+  saveLastCompletedSession,
+  savePendingSession,
+} from './features/history/sessionStorage';
 
 import { GameCanvas } from './game/rendering/GameCanvas';
 import { GameOver } from './game/rendering/GameOver';
@@ -114,6 +118,7 @@ const App = () => {
     submittedMatchIdRef.current = matchId;
     sessionRequestRef.current = sessionRequest;
 
+    saveLastCompletedSession(sessionRequest);
     savePendingSession(sessionRequest);
     createSession(sessionRequest);
   }, [

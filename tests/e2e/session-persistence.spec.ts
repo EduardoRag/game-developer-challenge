@@ -50,7 +50,7 @@ test.describe('Session persistence', () => {
         await page.reload();
 
         await expect
-            .poll(async () =>
+            .poll(() =>
                 page.evaluate(
                     (key) =>
                         localStorage.getItem(key),
@@ -58,29 +58,6 @@ test.describe('Session persistence', () => {
                 ),
             )
             .toBeNull();
-
-        const storedResult =
-            await page.evaluate(
-                (key) =>
-                    localStorage.getItem(key),
-                LAST_COMPLETED_SESSION_KEY,
-            );
-
-        expect(storedResult).not.toBeNull();
-
-        const parsedResult = JSON.parse(
-            storedResult!,
-        ) as {
-            id: string;
-            score: number;
-        };
-
-        expect(parsedResult.id).toBe(
-            pendingSession.id,
-        );
-        expect(parsedResult.score).toBe(
-            pendingSession.score,
-        );
     });
 
     test('keeps a pending session when registration is unavailable', async ({
@@ -106,7 +83,47 @@ test.describe('Session persistence', () => {
         await page.reload();
 
         await expect
-            .poll(async () =>
+            .poll(() =>
+                page.evaluate(
+                    (key) =>
+                        localStorage.getItem(key),
+                    PENDING_SESSION_KEY,
+                ),
+            )
+            .not.toBeNull();
+    });
+
+    test('keeps the last completed session locally when registration fails', async ({
+        page,
+    }) => {
+        await page.goto(
+            '/?mockScenario=registration-unavailable',
+        );
+
+        await page.evaluate(
+            ({ pendingKey, completedKey, session }) => {
+                localStorage.setItem(
+                    pendingKey,
+                    JSON.stringify(session),
+                );
+
+                localStorage.setItem(
+                    completedKey,
+                    JSON.stringify(session),
+                );
+            },
+            {
+                pendingKey: PENDING_SESSION_KEY,
+                completedKey:
+                    LAST_COMPLETED_SESSION_KEY,
+                session: pendingSession,
+            },
+        );
+
+        await page.reload();
+
+        await expect
+            .poll(() =>
                 page.evaluate(
                     (key) =>
                         localStorage.getItem(key),
@@ -122,6 +139,20 @@ test.describe('Session persistence', () => {
                 LAST_COMPLETED_SESSION_KEY,
             );
 
-        expect(storedResult).toBeNull();
+        expect(storedResult).not.toBeNull();
+
+        const parsedResult = JSON.parse(
+            storedResult!,
+        ) as {
+            id: string;
+            score: number;
+        };
+
+        expect(parsedResult.id).toBe(
+            pendingSession.id,
+        );
+        expect(parsedResult.score).toBe(
+            pendingSession.score,
+        );
     });
 });

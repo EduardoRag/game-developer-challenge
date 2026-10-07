@@ -1,7 +1,4 @@
-import type {
-    CreateSessionRequest,
-    CreateSessionResponse,
-} from '../../infrastructure/api/types';
+import type { CreateSessionRequest } from '../../infrastructure/api/types';
 
 const LAST_COMPLETED_SESSION_KEY =
     'pirate-battle-last-completed-session';
@@ -24,7 +21,7 @@ const parseStoredValue = <T>(
 };
 
 export const saveLastCompletedSession = (
-    session: CreateSessionResponse,
+    session: CreateSessionRequest,
 ) => {
     localStorage.setItem(
         LAST_COMPLETED_SESSION_KEY,
@@ -33,8 +30,8 @@ export const saveLastCompletedSession = (
 };
 
 export const loadLastCompletedSession =
-    (): CreateSessionResponse | null =>
-        parseStoredValue<CreateSessionResponse>(
+    (): CreateSessionRequest | null =>
+        parseStoredValue<CreateSessionRequest>(
             localStorage.getItem(
                 LAST_COMPLETED_SESSION_KEY,
             ),
