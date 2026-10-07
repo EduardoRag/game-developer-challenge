@@ -268,6 +268,280 @@ test.describe('Gameplay', () => {
         expect(duringCooldown!.projectiles.player).toBe(1);
     });
 
+    test('spawns enemies at a safe distance from the player and obstacles', async ({
+        page,
+    }) => {
+        await page.goto('/');
+
+        await page.getByRole('button', { name: 'OPTIONS' }).click();
+
+        const decreaseSpawnTimeButton = page.getByRole('button', {
+            name: 'Decrease enemy spawn time',
+        });
+
+        while (await decreaseSpawnTimeButton.isEnabled()) {
+            await decreaseSpawnTimeButton.click();
+        }
+
+        await page.getByRole('button', { name: 'MAIN MENU' }).click();
+
+        await page.getByRole('button', { name: 'PLAY' }).click();
+
+        await expect(
+            page.getByRole('button', { name: 'START' }),
+        ).toBeVisible({ timeout: 15_000 });
+
+        await page.getByRole('button', { name: 'START' }).click();
+
+        await expect(
+            page.getByRole('button', { name: 'Pause game' }),
+        ).toBeVisible();
+
+        const initialSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(initialSnapshot).toBeTruthy();
+
+        const initialEnemyCount = initialSnapshot!.enemies.length;
+
+        await expect
+            .poll(
+                async () => {
+                    const snapshot = await page.evaluate(() => {
+                        return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                    });
+
+                    return snapshot?.enemies.length;
+                },
+                {
+                    timeout: 5_000,
+                },
+            )
+            .toBeGreaterThan(initialEnemyCount);
+
+        const snapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(snapshot).toBeTruthy();
+
+        const spawnedEnemies = snapshot!.enemies.slice(
+            initialEnemyCount,
+        );
+
+        expect(spawnedEnemies.length).toBeGreaterThan(0);
+
+        for (const enemy of spawnedEnemies) {
+            const distanceFromPlayer = Math.hypot(
+                enemy.x - snapshot!.player.x,
+                enemy.y - snapshot!.player.y,
+            );
+
+            expect(distanceFromPlayer).toBeGreaterThanOrEqual(250);
+
+            for (const obstacle of snapshot!.obstacles) {
+                const insideObstacleSafetyArea =
+                    enemy.x >= obstacle.x - 40 &&
+                    enemy.x <=
+                    obstacle.x + obstacle.width + 40 &&
+                    enemy.y >= obstacle.y - 40 &&
+                    enemy.y <=
+                    obstacle.y + obstacle.height + 40;
+
+                expect(insideObstacleSafetyArea).toBe(false);
+            }
+        }
+    });
+
+    test('shooter attacks the player from range', async ({
+        page,
+    }) => {
+        await startGame(page);
+
+        const initialSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(initialSnapshot).toBeTruthy();
+
+        const shooterIndex = initialSnapshot!.enemies.findIndex(
+            (enemy) => enemy.type === 'shooter',
+        );
+
+        expect(shooterIndex).toBeGreaterThanOrEqual(0);
+
+        const player = initialSnapshot!.player;
+        const initialHealth = player.health;
+
+        const preferredDistance = 300;
+        const arenaMargin = 50;
+
+        const availableSpace = {
+            right:
+                initialSnapshot!.arena.width -
+                player.x -
+                arenaMargin,
+            left: player.x - arenaMargin,
+            down:
+                initialSnapshot!.arena.height -
+                player.y -
+                arenaMargin,
+            up: player.y - arenaMargin,
+        };
+
+        const direction = Object.entries(availableSpace).reduce(
+            (best, current) =>
+                current[1] > best[1] ? current : best,
+        );
+
+        expect(direction[1]).toBeGreaterThanOrEqual(220);
+
+        const shooterDistance = Math.min(
+            preferredDistance,
+            direction[1],
+        );
+
+        const shooterPosition = {
+            x: player.x,
+            y: player.y,
+        };
+
+        switch (direction[0]) {
+            case 'right':
+                shooterPosition.x += shooterDistance;
+                break;
+            case 'left':
+                shooterPosition.x -= shooterDistance;
+                break;
+            case 'down':
+                shooterPosition.y += shooterDistance;
+                break;
+            case 'up':
+                shooterPosition.y -= shooterDistance;
+                break;
+        }
+
+        await page.evaluate(
+            ({ index, x, y }) => {
+                window.__PIRATE_BATTLE_E2E__?.setEnemyPosition(
+                    index,
+                    x,
+                    y,
+                );
+            },
+            {
+                index: shooterIndex,
+                x: shooterPosition.x,
+                y: shooterPosition.y,
+            },
+        );
+
+        await expect
+            .poll(
+                async () => {
+                    const snapshot = await page.evaluate(() => {
+                        return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                    });
+
+                    return snapshot?.player.health;
+                },
+                {
+                    timeout: 5_000,
+                },
+            )
+            .toBeLessThan(initialHealth);
+    });
+
+    test('chaser pursues the player and deals contact damage without awarding score', async ({
+        page,
+    }) => {
+        await startGame(page);
+
+        const initialSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(initialSnapshot).toBeTruthy();
+
+        const chaserIndex = initialSnapshot!.enemies.findIndex(
+            (enemy) => enemy.type === 'chaser',
+        );
+
+        expect(chaserIndex).toBeGreaterThanOrEqual(0);
+
+        const player = initialSnapshot!.player;
+        const initialScore = initialSnapshot!.score;
+        const initialHealth = initialSnapshot!.player.health;
+
+        await page.evaluate(
+            ({ index, x, y }) => {
+                window.__PIRATE_BATTLE_E2E__?.setEnemyPosition(
+                    index,
+                    x,
+                    y,
+                );
+            },
+            {
+                index: chaserIndex,
+                x: player.x,
+                y: player.y + 150,
+            },
+        );
+
+        const positionedSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(positionedSnapshot).toBeTruthy();
+
+        const positionedChaser =
+            positionedSnapshot!.enemies[chaserIndex];
+
+        const initialDistance = Math.hypot(
+            positionedChaser.x - player.x,
+            positionedChaser.y - player.y,
+        );
+
+        await expect
+            .poll(async () => {
+                const snapshot = await page.evaluate(() => {
+                    return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                });
+
+                const chaser = snapshot?.enemies.find(
+                    (enemy) => enemy.type === 'chaser',
+                );
+
+                if (!snapshot || !chaser) {
+                    return 0;
+                }
+
+                return Math.hypot(
+                    chaser.x - snapshot.player.x,
+                    chaser.y - snapshot.player.y,
+                );
+            })
+            .toBeLessThan(initialDistance);
+
+        await expect
+            .poll(async () => {
+                const snapshot = await page.evaluate(() => {
+                    return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                });
+
+                return snapshot?.player.health;
+            })
+            .toBeLessThan(initialHealth);
+
+        const finalSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(finalSnapshot).toBeTruthy();
+        expect(finalSnapshot!.score).toBe(initialScore);
+    });
+
     test('damages and destroys an enemy awarding exactly one point', async ({
         page,
     }) => {
