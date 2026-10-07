@@ -31,6 +31,9 @@ export type GameDebugSnapshot = {
         width: number;
         height: number;
     }>;
+    weapon: {
+        frontCooldown: number;
+    };
     projectiles: {
         player: number;
         enemy: number;

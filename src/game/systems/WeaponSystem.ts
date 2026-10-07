@@ -33,6 +33,10 @@ export class WeaponSystem {
         return this.frontCooldown <= 0;
     }
 
+    public getFrontCooldown() {
+        return this.frontCooldown;
+    }
+
     public canFireLeftBroadside() {
         return this.leftBroadsideCooldown <= 0;
     }

@@ -61,6 +61,7 @@ export class Game {
     private started = false;
 
     private debugFreezeEnemies = false;
+    private debugFreezeWeaponCooldowns = false;
 
     constructor(
         container: HTMLDivElement,
@@ -265,7 +266,9 @@ export class Game {
             return;
         }
 
-        this.weaponSystem.update(deltaTime);
+        if (!this.debugFreezeWeaponCooldowns) {
+            this.weaponSystem.update(deltaTime);
+        }
 
         this.playerSystem.updateMovement(
             this.player,
@@ -573,6 +576,28 @@ export class Game {
         this.debugFreezeEnemies = frozen;
     }
 
+    public setWeaponCooldownsFrozenForDebug(frozen: boolean) {
+        if (!import.meta.env.DEV) return;
+
+        this.debugFreezeWeaponCooldowns = frozen;
+    }
+
+    public setTimeRemainingForDebug(timeRemaining: number) {
+        if (!import.meta.env.DEV) {
+            return;
+        }
+
+        this.timeRemaining = Math.max(0, timeRemaining);
+    }
+
+    public damagePlayerForDebug(damage: number) {
+        if (!import.meta.env.DEV || !this.player) {
+            return;
+        }
+
+        this.player.takeDamage(Math.max(0, damage));
+    }
+
     public getDebugSnapshot(): GameDebugSnapshot | null {
         if (!this.player || !this.initialized || this.destroyed) {
             return null;
@@ -603,6 +628,10 @@ export class Game {
             obstacles: this.world.obstacles.map((obstacle) => ({
                 ...obstacle,
             })),
+            weapon: {
+                frontCooldown:
+                    this.weaponSystem.getFrontCooldown(),
+            },
             projectiles: {
                 player: this.projectileSystem
                     .getProjectiles()

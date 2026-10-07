@@ -12,6 +12,9 @@ declare global {
                 y: number,
             ) => void;
             setEnemiesFrozen: (frozen: boolean) => void;
+            setTimeRemaining: (timeRemaining: number) => void;
+            damagePlayer: (damage: number) => void;
+            setWeaponCooldownsFrozen: (frozen: boolean) => void;
         };
     }
 }

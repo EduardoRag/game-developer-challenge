@@ -34,10 +34,11 @@ export const GameCanvas = ({
         if (import.meta.env.DEV) {
             window.__PIRATE_BATTLE_E2E__ = {
                 getSnapshot: () => game.getDebugSnapshot(),
-                setEnemyPosition: (index, x, y) =>
-                    game.setEnemyPositionForDebug(index, x, y),
-                setEnemiesFrozen: (frozen) =>
-                    game.setEnemiesFrozenForDebug(frozen),
+                setEnemyPosition: (index, x, y) => game.setEnemyPositionForDebug(index, x, y),
+                setEnemiesFrozen: (frozen) => game.setEnemiesFrozenForDebug(frozen),
+                setTimeRemaining: (timeRemaining) => game.setTimeRemainingForDebug(timeRemaining),
+                damagePlayer: (damage) => game.damagePlayerForDebug(damage),
+                setWeaponCooldownsFrozen: (frozen) => game.setWeaponCooldownsFrozenForDebug(frozen),
             };
         }
 

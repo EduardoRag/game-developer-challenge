@@ -245,6 +245,7 @@ test.describe('Gameplay', () => {
         });
 
         expect(beforeShot).toBeTruthy();
+        expect(beforeShot!.weapon.frontCooldown).toBe(0);
 
         await page.keyboard.press('Space');
 
@@ -254,18 +255,39 @@ test.describe('Gameplay', () => {
                     return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
                 });
 
-                return snapshot?.projectiles.player;
+                return snapshot?.weapon.frontCooldown ?? 0;
             })
-            .toBe(1);
+            .toBeGreaterThan(0);
 
-        await page.keyboard.press('Space');
+        await page.evaluate(() => {
+            window.__PIRATE_BATTLE_E2E__?.setWeaponCooldownsFrozen(
+                true,
+            );
+        });
 
-        const duringCooldown = await page.evaluate(() => {
+        const frozenSnapshot = await page.evaluate(() => {
             return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
         });
 
-        expect(duringCooldown).toBeTruthy();
-        expect(duringCooldown!.projectiles.player).toBe(1);
+        expect(frozenSnapshot).toBeTruthy();
+        expect(
+            frozenSnapshot!.weapon.frontCooldown,
+        ).toBeGreaterThan(0);
+
+        const frozenCooldown =
+            frozenSnapshot!.weapon.frontCooldown;
+
+        await page.keyboard.press('Space');
+
+        await expect
+            .poll(async () => {
+                const snapshot = await page.evaluate(() => {
+                    return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                });
+
+                return snapshot?.weapon.frontCooldown;
+            })
+            .toBe(frozenCooldown);
     });
 
     test('spawns enemies at a safe distance from the player and obstacles', async ({
@@ -296,6 +318,10 @@ test.describe('Gameplay', () => {
         await expect(
             page.getByRole('button', { name: 'Pause game' }),
         ).toBeVisible();
+
+        await page.evaluate(() => {
+            window.__PIRATE_BATTLE_E2E__?.setEnemiesFrozen(true);
+        });
 
         const initialSnapshot = await page.evaluate(() => {
             return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
@@ -451,6 +477,162 @@ test.describe('Gameplay', () => {
                 },
             )
             .toBeLessThan(initialHealth);
+    });
+
+    test('ends the match when the session time runs out', async ({
+        page,
+    }) => {
+        await startGame(page);
+
+        await page.evaluate(() => {
+            window.__PIRATE_BATTLE_E2E__?.setTimeRemaining(0.1);
+        });
+
+        await expect
+            .poll(async () => {
+                const snapshot = await page.evaluate(() => {
+                    return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                });
+
+                return snapshot?.gameState;
+            })
+            .toBe('gameOver');
+
+        const snapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(snapshot).toBeTruthy();
+        expect(snapshot!.endReason).toBe('timeUp');
+        expect(snapshot!.timeRemaining).toBe(0);
+    });
+
+    test('ends the match when the player ship is destroyed', async ({
+        page,
+    }) => {
+        await startGame(page);
+
+        const initialSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(initialSnapshot).toBeTruthy();
+
+        await page.getByRole('button', {
+            name: 'Pause game',
+        }).click();
+
+        await expect(
+            page.getByRole('button', {
+                name: 'Resume game',
+            }),
+        ).toBeVisible();
+
+        const pausedSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(pausedSnapshot).toBeTruthy();
+        expect(pausedSnapshot!.player.health).toBeGreaterThan(15);
+
+        await page.evaluate((health) => {
+            window.__PIRATE_BATTLE_E2E__?.damagePlayer(
+                health - 15,
+            );
+        }, pausedSnapshot!.player.health);
+
+        const preparedSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(preparedSnapshot).toBeTruthy();
+        expect(preparedSnapshot!.player.health).toBe(15);
+
+        const shooterIndex = initialSnapshot!.enemies.findIndex(
+            (enemy) => enemy.type === 'shooter',
+        );
+
+        expect(shooterIndex).toBeGreaterThanOrEqual(0);
+
+        const player = initialSnapshot!.player;
+
+        const availableSpace = {
+            right: initialSnapshot!.arena.width - player.x - 50,
+            left: player.x - 50,
+            down: initialSnapshot!.arena.height - player.y - 50,
+            up: player.y - 50,
+        };
+
+        const direction = Object.entries(availableSpace).reduce(
+            (best, current) =>
+                current[1] > best[1] ? current : best,
+        );
+
+        expect(direction[1]).toBeGreaterThanOrEqual(220);
+
+        const distance = Math.min(300, direction[1]);
+
+        const shooterPosition = {
+            x: player.x,
+            y: player.y,
+        };
+
+        switch (direction[0]) {
+            case 'right':
+                shooterPosition.x += distance;
+                break;
+            case 'left':
+                shooterPosition.x -= distance;
+                break;
+            case 'down':
+                shooterPosition.y += distance;
+                break;
+            case 'up':
+                shooterPosition.y -= distance;
+                break;
+        }
+
+        await page.evaluate(
+            ({ index, x, y }) => {
+                window.__PIRATE_BATTLE_E2E__?.setEnemyPosition(
+                    index,
+                    x,
+                    y,
+                );
+            },
+            {
+                index: shooterIndex,
+                x: shooterPosition.x,
+                y: shooterPosition.y,
+            },
+        );
+
+        await page.getByRole('dialog').getByRole('button', {
+            name: 'RESUME',
+        }).click();
+
+        await expect
+            .poll(
+                async () => {
+                    const snapshot = await page.evaluate(() => {
+                        return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                    });
+
+                    return snapshot?.gameState;
+                },
+                {
+                    timeout: 5_000,
+                },
+            )
+            .toBe('gameOver');
+
+        const finalSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(finalSnapshot).toBeTruthy();
+        expect(finalSnapshot!.player.health).toBe(0);
+        expect(finalSnapshot!.endReason).toBe('shipDestroyed');
     });
 
     test('chaser pursues the player and deals contact damage without awarding score', async ({
