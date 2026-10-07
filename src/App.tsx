@@ -5,6 +5,8 @@ import {
   useState,
 } from 'react';
 
+import { loadPendingSession, savePendingSession } from './features/history/sessionStorage';
+
 import { GameCanvas } from './game/rendering/GameCanvas';
 import { GameOver } from './game/rendering/GameOver';
 import { Hud } from './game/rendering/Hud';
@@ -112,6 +114,7 @@ const App = () => {
     submittedMatchIdRef.current = matchId;
     sessionRequestRef.current = sessionRequest;
 
+    savePendingSession(sessionRequest);
     createSession(sessionRequest);
   }, [
     snapshot.gameState,
@@ -121,6 +124,17 @@ const App = () => {
     sessionConfig,
     createSession,
   ]);
+
+  useEffect(() => {
+    const pendingSession = loadPendingSession();
+
+    if (!pendingSession) {
+      return;
+    }
+
+    sessionRequestRef.current = pendingSession;
+    createSession(pendingSession);
+  }, [createSession]);
 
   const handleRetryRegistration = () => {
     const sessionRequest = sessionRequestRef.current;

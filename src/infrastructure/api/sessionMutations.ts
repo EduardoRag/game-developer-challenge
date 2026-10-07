@@ -1,7 +1,6 @@
-import {
-    useMutation,
-    useQueryClient,
-} from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+import { clearPendingSession, saveLastCompletedSession } from '../../features/history/sessionStorage';
 
 import { historyKeys } from '../../features/history/queries';
 import { rankingKeys } from '../../features/ranking/queries';
@@ -14,7 +13,10 @@ export const useCreateSessionMutation = () => {
     return useMutation({
         mutationFn: createSession,
 
-        onSuccess: async () => {
+        onSuccess: async (session) => {
+            saveLastCompletedSession(session);
+            clearPendingSession(session.id);
+
             await Promise.all([
                 queryClient.invalidateQueries({
                     queryKey: rankingKeys.all,
