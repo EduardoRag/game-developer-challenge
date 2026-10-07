@@ -749,7 +749,15 @@ test.describe('Gameplay', () => {
                 .poll(getShooterHealth)
                 .toBe(expectedHealth);
 
-            await page.waitForTimeout(750);
+            await expect
+                .poll(async () => {
+                    const snapshot = await page.evaluate(() => {
+                        return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                    });
+
+                    return snapshot?.weapon.frontCooldown ?? 0;
+                })
+                .toBe(0);
         }
 
         await page.keyboard.press('Space');

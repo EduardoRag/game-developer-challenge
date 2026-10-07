@@ -86,7 +86,25 @@ test.describe('Visual regression', () => {
                 throw new Error('E2E game controls are not available.');
             }
 
+            const snapshot = game.getSnapshot();
+
+            if (!snapshot) {
+                throw new Error('E2E game snapshot is not available.');
+            }
+
             game.setEnemiesFrozen(true);
+
+            game.setEnemyPosition(
+                0,
+                snapshot.arena.width * 0.15,
+                snapshot.arena.height * 0.3,
+            );
+
+            game.setEnemyPosition(
+                1,
+                snapshot.arena.width * 0.85,
+                snapshot.arena.height * 0.7,
+            );
         });
 
         await page
@@ -158,7 +176,25 @@ test.describe('Visual regression', () => {
                 throw new Error('E2E game controls are not available.');
             }
 
+            const snapshot = game.getSnapshot();
+
+            if (!snapshot) {
+                throw new Error('E2E game snapshot is not available.');
+            }
+
             game.setEnemiesFrozen(true);
+
+            game.setEnemyPosition(
+                0,
+                snapshot.arena.width * 0.15,
+                snapshot.arena.height * 0.3,
+            );
+
+            game.setEnemyPosition(
+                1,
+                snapshot.arena.width * 0.85,
+                snapshot.arena.height * 0.7,
+            );
         });
 
         await page
