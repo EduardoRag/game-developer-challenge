@@ -1,4 +1,7 @@
+import { useState } from 'react';
+
 import { MenuPanel } from '../../shared/components/MenuPanel';
+import { Pagination } from '../../shared/components/Pagination';
 
 import { useRankingQuery } from './queries';
 
@@ -7,11 +10,24 @@ type RankingScreenProps = {
     onHistory: () => void;
 };
 
+const PAGE_SIZE = 5;
+
 export const RankingScreen = ({
     onBack,
     onHistory,
 }: RankingScreenProps) => {
-    const rankingQuery = useRankingQuery();
+    const [page, setPage] = useState(1);
+
+    const rankingQuery = useRankingQuery(page, PAGE_SIZE);
+
+    const totalPages = rankingQuery.data
+        ? Math.max(
+            1,
+            Math.ceil(
+                rankingQuery.data.total / PAGE_SIZE,
+            ),
+        )
+        : 1;
 
     return (
         <MenuPanel
@@ -66,17 +82,60 @@ export const RankingScreen = ({
 
             {rankingQuery.isSuccess &&
                 rankingQuery.data.items.length > 0 && (
-                    <ol className="ranking-list">
-                        {rankingQuery.data.items.map((entry) => (
-                            <li
-                                key={entry.id}
-                                className="ranking-list__item"
+                    <>
+                        <div className="ranking-table">
+                            <div
+                                className="ranking-table__header"
+                                aria-hidden="true"
                             >
-                                <span>{entry.playerName}</span>
-                                <strong>{entry.score}</strong>
-                            </li>
-                        ))}
-                    </ol>
+                                <span>RANK</span>
+                                <span>CAPTAIN</span>
+                                <span>POINTS</span>
+                            </div>
+
+                            <ul className="ranking-list">
+                                {rankingQuery.data.items.map((entry, index) => {
+                                    const position =
+                                        (page - 1) * PAGE_SIZE + index + 1;
+
+                                    const isCurrentPlayer =
+                                        entry.playerName === 'Captain Jack';
+
+                                    return (
+                                        <li
+                                            key={entry.id}
+                                            className={`ranking-list__item ${isCurrentPlayer
+                                                    ? 'ranking-list__item--current'
+                                                    : ''
+                                                }`}
+                                        >
+                                            <span className="ranking-list__position">
+                                                {position.toString().padStart(2, '0')}
+                                            </span>
+
+                                            <span className="ranking-list__captain">
+                                                {entry.playerName}
+
+                                                {isCurrentPlayer && (
+                                                    <span className="ranking-list__you">
+                                                        YOU
+                                                    </span>
+                                                )}
+                                            </span>
+
+                                            <strong>{entry.score}</strong>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </div>
+
+                        <Pagination
+                            page={page}
+                            totalPages={totalPages}
+                            onPageChange={setPage}
+                        />
+                    </>
                 )}
 
             <button

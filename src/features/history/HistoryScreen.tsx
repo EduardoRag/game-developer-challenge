@@ -1,10 +1,9 @@
 import { useState } from 'react';
 
 import { MenuPanel } from '../../shared/components/MenuPanel';
+import { Pagination } from '../../shared/components/Pagination';
 
 import { useHistoryQuery } from './queries';
-
-import { Pagination } from '../../shared/components/Pagination';
 
 type HistoryScreenProps = {
     onBack: () => void;
@@ -12,6 +11,7 @@ type HistoryScreenProps = {
 };
 
 const PAGE_SIZE = 5;
+const CURRENT_PLAYER_NAME = 'Captain Jack';
 
 const formatDate = (playedAt: string) => {
     const date = new Date(playedAt);
@@ -138,35 +138,44 @@ export const HistoryScreen = ({
 
                             <ul className="history-list">
                                 {historyQuery.data.items.map(
-                                    (entry) => (
-                                        <li
-                                            key={entry.id}
-                                            className="history-list__item"
-                                        >
-                                            <span>
-                                                {formatDate(
-                                                    entry.playedAt,
-                                                )}
-                                            </span>
+                                    (entry) => {
+                                        const isCurrentPlayer =
+                                            entry.playerName ===
+                                            CURRENT_PLAYER_NAME;
 
-                                            <strong>
-                                                {entry.score}
-                                            </strong>
+                                        return (
+                                            <li
+                                                key={entry.id}
+                                                className={`history-list__item ${isCurrentPlayer
+                                                        ? 'history-list__item--current'
+                                                        : ''
+                                                    }`}
+                                            >
+                                                <span>
+                                                    {formatDate(
+                                                        entry.playedAt,
+                                                    )}
+                                                </span>
 
-                                            <span>
-                                                {formatDuration(
-                                                    entry.duration,
-                                                )}
-                                            </span>
+                                                <strong>
+                                                    {entry.score}
+                                                </strong>
 
-                                            <span>
-                                                {entry.endReason ===
-                                                    'timeUp'
-                                                    ? 'TIME UP'
-                                                    : 'DEFEATED'}
-                                            </span>
-                                        </li>
-                                    ),
+                                                <span>
+                                                    {formatDuration(
+                                                        entry.duration,
+                                                    )}
+                                                </span>
+
+                                                <span>
+                                                    {entry.endReason ===
+                                                        'timeUp'
+                                                        ? 'TIME UP'
+                                                        : 'DEFEATED'}
+                                                </span>
+                                            </li>
+                                        );
+                                    },
                                 )}
                             </ul>
                         </div>
