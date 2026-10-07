@@ -268,6 +268,104 @@ test.describe('Gameplay', () => {
         expect(duringCooldown!.projectiles.player).toBe(1);
     });
 
+    test('damages and destroys an enemy awarding exactly one point', async ({
+        page,
+    }) => {
+        await startGame(page);
+
+        await page.evaluate(() => {
+            window.__PIRATE_BATTLE_E2E__?.setEnemiesFrozen(true);
+        });
+
+        const initialSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(initialSnapshot).toBeTruthy();
+
+        const shooterIndex = initialSnapshot!.enemies.findIndex(
+            (enemy) => enemy.type === 'shooter',
+        );
+
+        expect(shooterIndex).toBeGreaterThanOrEqual(0);
+
+        const player = initialSnapshot!.player;
+        const initialScore = initialSnapshot!.score;
+
+        await page.evaluate(
+            ({ index, x, y }) => {
+                window.__PIRATE_BATTLE_E2E__?.setEnemyPosition(
+                    index,
+                    x,
+                    y,
+                );
+            },
+            {
+                index: shooterIndex,
+                x: player.x,
+                y: player.y + 150,
+            },
+        );
+
+        const getShooterHealth = async () => {
+            return page.evaluate(() => {
+                const snapshot =
+                    window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+
+                return snapshot?.enemies.find(
+                    (enemy) => enemy.type === 'shooter',
+                )?.health;
+            });
+        };
+
+        expect(await getShooterHealth()).toBe(50);
+
+        const expectedHealthAfterShots = [35, 20, 5];
+
+        for (const expectedHealth of expectedHealthAfterShots) {
+            await page.keyboard.press('Space');
+
+            await expect
+                .poll(getShooterHealth)
+                .toBe(expectedHealth);
+
+            await page.waitForTimeout(750);
+        }
+
+        await page.keyboard.press('Space');
+
+        await expect
+            .poll(async () => {
+                const snapshot = await page.evaluate(() => {
+                    return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                });
+
+                return snapshot?.enemies.some(
+                    (enemy) => enemy.type === 'shooter',
+                );
+            })
+            .toBe(false);
+
+        await expect
+            .poll(async () => {
+                const snapshot = await page.evaluate(() => {
+                    return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+                });
+
+                return snapshot?.score;
+            })
+            .toBe(initialScore + 1);
+
+        await page.waitForTimeout(250);
+
+        const finalSnapshot = await page.evaluate(() => {
+            return window.__PIRATE_BATTLE_E2E__?.getSnapshot();
+        });
+
+        expect(finalSnapshot).toBeTruthy();
+        expect(finalSnapshot!.score).toBe(initialScore + 1);
+    });
+
     test('supports touch controls and simultaneous input', async ({
         page,
     }, testInfo) => {

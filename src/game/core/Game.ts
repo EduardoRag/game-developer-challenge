@@ -60,6 +60,8 @@ export class Game {
     private destroyed = false;
     private started = false;
 
+    private debugFreezeEnemies = false;
+
     constructor(
         container: HTMLDivElement,
         config: GameSessionConfig,
@@ -316,12 +318,14 @@ export class Game {
 
         const enemies = this.enemySystem.getEnemies();
 
-        const shootersReadyToFire = this.enemySystem.update(
-            this.player,
-            this.collisionSystem,
-            this.world.obstacles,
-            deltaTime,
-        );
+        const shootersReadyToFire = this.debugFreezeEnemies
+            ? []
+            : this.enemySystem.update(
+                this.player,
+                this.collisionSystem,
+                this.world.obstacles,
+                deltaTime,
+            );
 
         const collidedChasers = this.combatSystem.resolveChaserContacts(
             enemies,
@@ -559,6 +563,14 @@ export class Game {
         }
 
         enemy.setPosition(x, y);
+    }
+
+    public setEnemiesFrozenForDebug(frozen: boolean) {
+        if (!import.meta.env.DEV) {
+            return;
+        }
+
+        this.debugFreezeEnemies = frozen;
     }
 
     public getDebugSnapshot(): GameDebugSnapshot | null {

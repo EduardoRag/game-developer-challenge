@@ -36,6 +36,8 @@ export const GameCanvas = ({
                 getSnapshot: () => game.getDebugSnapshot(),
                 setEnemyPosition: (index, x, y) =>
                     game.setEnemyPositionForDebug(index, x, y),
+                setEnemiesFrozen: (frozen) =>
+                    game.setEnemiesFrozenForDebug(frozen),
             };
         }
 

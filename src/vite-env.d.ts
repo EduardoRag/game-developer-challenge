@@ -11,6 +11,7 @@ declare global {
                 x: number,
                 y: number,
             ) => void;
+            setEnemiesFrozen: (frozen: boolean) => void;
         };
     }
 }
