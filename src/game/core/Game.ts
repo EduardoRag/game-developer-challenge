@@ -1,5 +1,8 @@
 import { Application, Assets, Texture } from 'pixi.js';
+
 import { ExplosionEffect } from '../rendering/ExplosionEffect';
+import { FireEffect } from '../rendering/FireEffect';
+import { ShipDamageEffect } from '../rendering/ShipDamageEffect';
 import { WorldRenderer } from '../rendering/WorldRenderer';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
@@ -45,6 +48,7 @@ export class Game {
     private readonly projectileSystem = new ProjectileSystem();
 
     private player: Player | null = null;
+    private playerDamageEffect: ShipDamageEffect | null = null;
 
     private projectileTexture: Texture | null = null;
 
@@ -134,6 +138,17 @@ export class Game {
             return;
         }
 
+        await FireEffect.loadTextures();
+
+        if (this.destroyed) {
+            return;
+        }
+
+        this.playerDamageEffect = new ShipDamageEffect(
+            this.app.stage,
+            this.gameplayScale,
+        );
+
         this.emitSnapshot();
     }
 
@@ -168,6 +183,9 @@ export class Game {
         this.destroyed = true;
 
         this.input.stop();
+
+        this.playerDamageEffect?.destroy();
+        this.playerDamageEffect = null;
 
         window.removeEventListener(
             'blur',
@@ -216,6 +234,7 @@ export class Game {
         this.updateProjectiles(deltaTime);
 
         this.destroyDeadEnemies();
+        this.updatePlayerDamageEffect();
 
         if (this.player.isDead()) {
             this.endGame('shipDestroyed');
@@ -538,4 +557,18 @@ export class Game {
             this.pause();
         }
     };
+
+    private updatePlayerDamageEffect() {
+        if (!this.player || !this.playerDamageEffect) {
+            return;
+        }
+
+        const position = this.player.getPosition();
+
+        this.playerDamageEffect.update(
+            position.x,
+            position.y,
+            this.player.getHealth() / GAME_CONFIG.player.maxHealth,
+        );
+    }
 }
