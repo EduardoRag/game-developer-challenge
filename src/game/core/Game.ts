@@ -23,6 +23,8 @@ import type { GameEndReason, GameSnapshot, GameState } from '../types/GameSnapsh
 
 import { InputManager } from '../input/InputManager';
 
+import type { GameDebugSnapshot } from '../types/GameDebugSnapshot';
+
 
 export class Game {
     private readonly app: Application;
@@ -539,6 +541,70 @@ export class Game {
         } finally {
             this.spawnSystem.finishEnemySpawn();
         }
+    }
+
+    public setEnemyPositionForDebug(
+        index: number,
+        x: number,
+        y: number,
+    ) {
+        if (!import.meta.env.DEV) {
+            return;
+        }
+
+        const enemy = this.enemySystem.getEnemies()[index];
+
+        if (!enemy) {
+            return;
+        }
+
+        enemy.setPosition(x, y);
+    }
+
+    public getDebugSnapshot(): GameDebugSnapshot | null {
+        if (!this.player || !this.initialized || this.destroyed) {
+            return null;
+        }
+
+        return {
+            player: {
+                ...this.player.getPosition(),
+                width: this.player.sprite.width,
+                height: this.player.sprite.height,
+                rotation: this.player.sprite.rotation,
+                health: this.player.getHealth(),
+            },
+            enemies: this.enemySystem.getEnemies().map((enemy) => ({
+                type: enemy.type,
+                ...enemy.getPosition(),
+                health: enemy.getHealth(),
+            })),
+            score: this.score,
+            timeRemaining: this.timeRemaining,
+            elapsedTime: this.elapsedTime,
+            gameState: this.gameState,
+            endReason: this.endReason,
+            arena: {
+                width: this.app.screen.width,
+                height: this.app.screen.height,
+            },
+            obstacles: this.world.obstacles.map((obstacle) => ({
+                ...obstacle,
+            })),
+            projectiles: {
+                player: this.projectileSystem
+                    .getProjectiles()
+                    .filter((projectile) => projectile.owner === 'player').length,
+                enemy: this.projectileSystem
+                    .getProjectiles()
+                    .filter((projectile) => projectile.owner === 'enemy').length,
+                items: this.projectileSystem.getProjectiles().map((projectile) => ({
+                    owner: projectile.owner,
+                    x: projectile.sprite.x,
+                    y: projectile.sprite.y,
+                })),
+            },
+        };
     }
 
     public setSnapshotListener(

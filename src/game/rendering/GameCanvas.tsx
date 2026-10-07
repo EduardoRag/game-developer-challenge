@@ -31,6 +31,16 @@ export const GameCanvas = ({
 
         const game = new Game(container, config);
 
+        if (import.meta.env.DEV) {
+            window.__PIRATE_BATTLE_E2E__ = {
+                getSnapshot: () => game.getDebugSnapshot(),
+                setEnemyPosition: (index, x, y) =>
+                    game.setEnemyPositionForDebug(index, x, y),
+            };
+        }
+
+        const debugApi = window.__PIRATE_BATTLE_E2E__;
+
         game.setSnapshotListener(onSnapshotChange);
 
         let cancelled = false;
@@ -71,6 +81,14 @@ export const GameCanvas = ({
 
         return () => {
             cancelled = true;
+
+            if (
+                import.meta.env.DEV &&
+                window.__PIRATE_BATTLE_E2E__ === debugApi
+            ) {
+                delete window.__PIRATE_BATTLE_E2E__;
+            }
+
             game.destroy();
         };
     }, [
