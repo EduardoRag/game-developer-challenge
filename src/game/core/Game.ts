@@ -1,4 +1,5 @@
 import { Application, Assets, Texture } from 'pixi.js';
+import { ExplosionEffect } from '../rendering/ExplosionEffect';
 import { WorldRenderer } from '../rendering/WorldRenderer';
 
 import { CollisionSystem } from '../systems/CollisionSystem';
@@ -122,6 +123,12 @@ export class Game {
         this.projectileTexture = await Assets.load(
             '/assets/png/default/ship_parts/cannon_ball.png',
         );
+
+        if (this.destroyed) {
+            return;
+        }
+
+        await ExplosionEffect.loadTextures();
 
         if (this.destroyed) {
             return;
@@ -314,12 +321,21 @@ export class Game {
 
         const enemies = this.enemySystem.getEnemies();
 
-        this.combatSystem.resolveProjectileHits(
+        const impacts = this.combatSystem.resolveProjectileHits(
             this.player,
             enemies,
             this.projectileSystem,
             this.collisionSystem,
         );
+
+        for (const impact of impacts) {
+            ExplosionEffect.play(
+                this.app.stage,
+                impact.x,
+                impact.y,
+                this.gameplayScale * 0.35,
+            );
+        }
 
         this.projectileSystem.removeInvalidProjectiles(
             this.app.screen.width,
@@ -330,10 +346,24 @@ export class Game {
     }
 
     private destroyDeadEnemies() {
-        const destroyedCount =
-            this.enemySystem.destroyDeadEnemies();
+        const deadEnemies = this.enemySystem
+            .getEnemies()
+            .filter((enemy) => enemy.isDead());
 
-        this.score += destroyedCount;
+        for (const enemy of deadEnemies) {
+            const position = enemy.getPosition();
+
+            ExplosionEffect.play(
+                this.app.stage,
+                position.x,
+                position.y,
+                this.gameplayScale,
+            );
+
+            this.enemySystem.destroyEnemy(enemy);
+        }
+
+        this.score += deadEnemies.length;
     }
 
     private async createPlayer(scale: number) {

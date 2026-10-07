@@ -12,6 +12,7 @@ export class CombatSystem {
         collisionSystem: CollisionSystem,
     ) {
         const projectiles = projectileSystem.getProjectiles();
+        const impacts: { x: number; y: number }[] = [];
 
         for (
             let index = projectiles.length - 1;
@@ -29,6 +30,11 @@ export class CombatSystem {
                 );
 
                 if (hitEnemy) {
+                    impacts.push({
+                        x: projectile.sprite.x,
+                        y: projectile.sprite.y,
+                    });
+
                     hitEnemy.takeDamage(
                         GAME_CONFIG.projectile.playerDamage,
                     );
@@ -46,6 +52,11 @@ export class CombatSystem {
                     player,
                 )
             ) {
+                impacts.push({
+                    x: projectile.sprite.x,
+                    y: projectile.sprite.y,
+                });
+
                 player.takeDamage(
                     GAME_CONFIG.projectile.enemyDamage,
                 );
@@ -53,6 +64,8 @@ export class CombatSystem {
                 projectileSystem.destroy(index);
             }
         }
+
+        return impacts;
     }
 
     private resolveChaserContactDamage(
