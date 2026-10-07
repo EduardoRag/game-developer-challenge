@@ -23,14 +23,40 @@ export class EnemySystem {
         y: number,
         scale = 1,
     ) {
-        const texturePath =
-            type === 'chaser'
-                ? '/assets/png/default/ships/ship_2.png'
-                : '/assets/png/default/ships/ship_3.png';
+        const texturePaths = type === 'chaser'
+            ? {
+                normal: '/assets/png/default/ships/ship_1.png',
+                damaged: '/assets/png/default/ships/ship_7.png',
+                critical: '/assets/png/default/ships/ship_13.png',
+                sunk: '/assets/png/default/ships/ship_19.png',
+            }
+            : {
+                normal: '/assets/png/default/ships/ship_3.png',
+                damaged: '/assets/png/default/ships/ship_9.png',
+                critical: '/assets/png/default/ships/ship_15.png',
+                sunk: '/assets/png/default/ships/ship_21.png',
+            };
 
-        const texture = await Assets.load(texturePath);
+        const [
+            normalTexture,
+            damagedTexture,
+            criticalTexture,
+            sunkTexture,
+        ] = await Promise.all([
+            Assets.load<Texture>(texturePaths.normal),
+            Assets.load<Texture>(texturePaths.damaged),
+            Assets.load<Texture>(texturePaths.critical),
+            Assets.load<Texture>(texturePaths.sunk),
+        ]);
 
-        const enemy = new Enemy(texture, type, scale);
+        const enemy = new Enemy(
+            normalTexture,
+            damagedTexture,
+            criticalTexture,
+            sunkTexture,
+            type,
+            scale,
+        );
 
         enemy.setPosition(x, y);
 

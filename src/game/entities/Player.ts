@@ -5,13 +5,27 @@ import { GAME_CONFIG } from '../config/gameConfig';
 export class Player {
     public readonly sprite: Sprite;
 
+    private readonly damagedTexture: Texture;
+    private readonly criticalTexture: Texture;
+    private readonly sunkTexture: Texture;
+
     private health: number = GAME_CONFIG.player.maxHealth;
 
-    constructor(texture: Texture, scale = 1) {
-        this.sprite = new Sprite(texture);
+    constructor(
+        normalTexture: Texture,
+        damagedTexture: Texture,
+        criticalTexture: Texture,
+        sunkTexture: Texture,
+        scale = 1,
+    ) {
+        this.sprite = new Sprite(normalTexture);
 
         this.sprite.anchor.set(0.5);
         this.sprite.scale.set(scale);
+
+        this.damagedTexture = damagedTexture;
+        this.criticalTexture = criticalTexture;
+        this.sunkTexture = sunkTexture;
     }
 
     public getPosition() {
@@ -27,6 +41,26 @@ export class Player {
 
     public takeDamage(damage: number) {
         this.health = Math.max(0, this.health - damage);
+        this.updateDamageTexture();
+    }
+
+    private updateDamageTexture() {
+        const healthPercentage =
+            this.health / GAME_CONFIG.player.maxHealth;
+
+        if (this.health <= 0) {
+            this.sprite.texture = this.sunkTexture;
+            return;
+        }
+
+        if (healthPercentage <= 0.3) {
+            this.sprite.texture = this.criticalTexture;
+            return;
+        }
+
+        if (healthPercentage <= 0.6) {
+            this.sprite.texture = this.damagedTexture;
+        }
     }
 
     public isDead() {

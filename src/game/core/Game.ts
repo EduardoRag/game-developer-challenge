@@ -1,4 +1,4 @@
-import { Application, Assets, Texture } from 'pixi.js';
+import { Application, Assets, Sprite, Texture } from 'pixi.js';
 
 import { ExplosionEffect } from '../rendering/ExplosionEffect';
 import { FireEffect } from '../rendering/FireEffect';
@@ -17,7 +17,7 @@ import { Player } from '../entities/Player';
 
 import { GAME_CONFIG } from '../config/gameConfig';
 
-import type { EnemyType } from '../entities/Enemy';
+import { Enemy, type EnemyType } from '../entities/Enemy';
 import type { GameSessionConfig } from '../types/GameSessionConfig';
 import type { GameEndReason, GameSnapshot, GameState } from '../types/GameSnapshot';
 
@@ -237,6 +237,15 @@ export class Game {
         this.updatePlayerDamageEffect();
 
         if (this.player.isDead()) {
+            const position = this.player.getPosition();
+
+            ExplosionEffect.play(
+                this.app.stage,
+                position.x,
+                position.y,
+                this.gameplayScale,
+            );
+
             this.endGame('shipDestroyed');
         } else if (this.timeRemaining <= 0) {
             this.endGame('timeUp');
@@ -277,6 +286,13 @@ export class Game {
 
         for (const projectile of projectiles) {
             this.app.stage.addChild(projectile.sprite);
+
+            ExplosionEffect.play(
+                this.app.stage,
+                projectile.sprite.x,
+                projectile.sprite.y,
+                this.gameplayScale * 0.2,
+            );
         }
     }
 
@@ -312,6 +328,17 @@ export class Game {
         );
 
         for (const chaser of collidedChasers) {
+            const position = chaser.getPosition();
+
+            this.createEnemyWreck(chaser);
+
+            ExplosionEffect.play(
+                this.app.stage,
+                position.x,
+                position.y,
+                this.gameplayScale,
+            );
+
             this.enemySystem.destroyEnemy(chaser);
         }
 
@@ -328,6 +355,13 @@ export class Game {
 
         for (const projectile of projectiles) {
             this.app.stage.addChild(projectile.sprite);
+
+            ExplosionEffect.play(
+                this.app.stage,
+                projectile.sprite.x,
+                projectile.sprite.y,
+                this.gameplayScale * 0.2,
+            );
         }
     }
 
@@ -364,6 +398,28 @@ export class Game {
         );
     }
 
+    private createEnemyWreck(enemy: Enemy) {
+        const position = enemy.getPosition();
+
+        const wreck = new Sprite(enemy.sunkTexture);
+
+        wreck.anchor.set(0.5);
+        wreck.position.set(position.x, position.y);
+        wreck.rotation = enemy.sprite.rotation;
+        wreck.scale.copyFrom(enemy.sprite.scale);
+
+        this.app.stage.addChild(wreck);
+
+        window.setTimeout(() => {
+            if (wreck.destroyed) {
+                return;
+            }
+
+            wreck.removeFromParent();
+            wreck.destroy();
+        }, 2000);
+    }
+
     private destroyDeadEnemies() {
         const deadEnemies = this.enemySystem
             .getEnemies()
@@ -371,6 +427,8 @@ export class Game {
 
         for (const enemy of deadEnemies) {
             const position = enemy.getPosition();
+
+            this.createEnemyWreck(enemy);
 
             ExplosionEffect.play(
                 this.app.stage,
@@ -386,15 +444,37 @@ export class Game {
     }
 
     private async createPlayer(scale: number) {
-        const texture = await Assets.load(
-            '/assets/png/default/ships/ship_1.png',
-        );
+        const [
+            normalTexture,
+            damagedTexture,
+            criticalTexture,
+            sunkTexture,
+        ] = await Promise.all([
+            Assets.load<Texture>(
+                '/assets/png/default/ships/ship_2.png',
+            ),
+            Assets.load<Texture>(
+                '/assets/png/default/ships/ship_8.png',
+            ),
+            Assets.load<Texture>(
+                '/assets/png/default/ships/ship_14.png',
+            ),
+            Assets.load<Texture>(
+                '/assets/png/default/ships/ship_20.png',
+            ),
+        ]);
 
         if (this.destroyed) {
             return;
         }
 
-        this.player = new Player(texture, scale);
+        this.player = new Player(
+            normalTexture,
+            damagedTexture,
+            criticalTexture,
+            sunkTexture,
+            scale,
+        );
 
         this.player.setPosition(
             this.app.screen.width / 2,

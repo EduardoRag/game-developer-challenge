@@ -6,15 +6,29 @@ export type EnemyType = 'chaser' | 'shooter';
 export class Enemy {
     public readonly sprite: Sprite;
     public readonly type: EnemyType;
+    public readonly sunkTexture: Texture;
+
+    private readonly damagedTexture: Texture;
+    private readonly criticalTexture: Texture;
 
     private health: number;
     private fireCooldown = 0;
 
-    constructor(texture: Texture, type: EnemyType, scale = 1) {
-        this.sprite = new Sprite(texture);
+    constructor(
+        normalTexture: Texture,
+        damagedTexture: Texture,
+        criticalTexture: Texture,
+        sunkTexture: Texture,
+        type: EnemyType,
+        scale = 1,
+    ) {
+        this.sprite = new Sprite(normalTexture);
         this.sprite.anchor.set(0.5);
         this.sprite.scale.set(scale);
 
+        this.damagedTexture = damagedTexture;
+        this.criticalTexture = criticalTexture;
+        this.sunkTexture = sunkTexture;
         this.type = type;
 
         this.health = this.getMaxHealth();
@@ -53,6 +67,20 @@ export class Enemy {
 
     public takeDamage(damage: number) {
         this.health = Math.max(0, this.health - damage);
+        this.updateDamageTexture();
+    }
+
+    private updateDamageTexture() {
+        const healthPercentage = this.getHealthPercentage();
+
+        if (healthPercentage <= 0.3) {
+            this.sprite.texture = this.criticalTexture;
+            return;
+        }
+
+        if (healthPercentage <= 0.6) {
+            this.sprite.texture = this.damagedTexture;
+        }
     }
 
     public isDead() {
