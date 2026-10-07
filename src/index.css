@@ -298,16 +298,18 @@ body {
 }
 
 .main-menu__secondary-actions {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   align-items: center;
-  justify-content: center;
-  gap: 12px;
+  gap: 8px;
+  width: 100%;
 }
 
 .main-menu__secondary-button {
-  width: 200px;
+  width: 100%;
   height: 68px;
-  font-size: 15px;
+  font-size: 13px;
+  background-size: 100% 100%;
 }
 
 /* Ranking and history */
@@ -539,6 +541,153 @@ body {
   text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
 }
 
+/* Controls */
+
+.controls-screen__panel {
+  width: min(690px, calc(100vw - 48px));
+  aspect-ratio: 1 / 0.88;
+}
+
+.controls-screen__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.controls-screen__title {
+  margin: 8% 0 0;
+
+  font-family: var(--font-game);
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 900;
+  line-height: 1;
+
+  color: var(--game-text);
+
+  text-shadow:
+    0 3px 0 rgb(60 45 45 / 45%),
+    0 4px 5px rgb(0 0 0 / 45%);
+}
+
+.controls-screen__subtitle {
+  margin: 14px 0 0;
+
+  font-family: var(--font-game);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 3px;
+
+  color: var(--game-text);
+
+  text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
+}
+
+.controls-screen__groups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+
+  width: min(400px, 90%);
+  margin-top: 24px;
+  margin-inline: auto;
+}
+
+.controls-screen__group {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.controls-screen__group h2 {
+  margin: 0 0 12px;
+  padding-left: 60px;
+
+  font-family: var(--font-game);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+
+  color: var(--game-text);
+  text-align: left;
+
+  text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
+}
+
+.controls-screen__group-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  width: 100%;
+}
+
+.controls-screen__pause {
+  display: flex;
+  justify-content: center;
+
+  margin-top: 14px;
+}
+
+.controls-screen__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.controls-screen__item img {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.controls-screen__description {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+
+  font-family: var(--font-game);
+}
+
+.controls-screen__description strong {
+  font-size: 15px;
+  font-weight: 900;
+
+  color: var(--game-text);
+
+  text-shadow: 1px 2px 2px rgb(0 0 0 / 45%);
+}
+
+.controls-screen__description span {
+  font-size: 12px;
+  font-weight: 700;
+
+  color: var(--game-text);
+
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 45%);
+}
+
+.controls-screen__touch-hint {
+  margin: 20px 0 0;
+
+  font-family: var(--font-game);
+  font-size: 11px;
+  font-weight: 700;
+
+  color: var(--game-text);
+  text-align: center;
+
+  text-shadow: 1px 1px 2px rgb(0 0 0 / 45%);
+}
+
+.controls-screen__back {
+  margin-top: auto;
+  margin-bottom: 8%;
+  flex-shrink: 0;
+}
+
 /* - value + */
 
 .options-screen__control {
@@ -623,39 +772,37 @@ body {
 /* Responsive */
 
 @media (max-width: 640px) {
-  .options-screen__panel {
+  .controls-screen__panel {
     width: min(560px, calc(100vw - 24px));
   }
 
-  .options-screen__title {
+  .controls-screen__title {
     margin-top: 6%;
   }
 
-  .options-screen__settings {
-    margin-top: 6%;
-    gap: 18px;
+  .controls-screen__groups {
+    gap: 32px;
+    margin-top: 18px;
   }
 
-  .options-screen__setting {
+  .controls-screen__group-list {
     gap: 8px;
   }
 
-  .options-screen__control {
-    grid-template-columns: 42px 1fr 42px;
-    gap: 12px;
+  .controls-screen__pause {
+    margin-top: 10px;
   }
 
-  .round-icon-button {
+  .controls-screen__item img {
     width: 42px;
     height: 42px;
   }
 
-  .round-icon-button img {
-    width: 18px;
-    height: 18px;
+  .controls-screen__touch-hint {
+    margin-top: 14px;
   }
 
-  .options-screen__back {
+  .controls-screen__back {
     margin-bottom: 5%;
   }
 }
@@ -974,12 +1121,6 @@ body {
   .main-menu__title {
     width: min(360px, 85%);
   }
-
-  .main-menu__secondary-button {
-    width: 170px;
-    height: 60px;
-    font-size: 13px;
-  }
 }
 
 /* Mobile landscape */
@@ -991,7 +1132,8 @@ body {
   .options-screen__panel,
   .pause-menu,
   .game-over__panel,
-  .data-screen__panel {
+  .data-screen__panel,
+  .controls-screen__panel {
     transform: scale(0.6);
     transform-origin: center;
   }

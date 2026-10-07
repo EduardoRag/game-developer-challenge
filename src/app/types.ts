@@ -3,4 +3,5 @@ export type AppScreen =
     | 'game'
     | 'options'
     | 'ranking'
-    | 'history';
+    | 'history'
+    | 'controls';

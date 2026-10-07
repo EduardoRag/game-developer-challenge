@@ -25,6 +25,8 @@ import { PauseOverlay } from './game/rendering/PauseOverlay';
 import { GameControls } from './game/rendering/GameControls';
 import type { GameControlsApi } from './game/types/GameControls';
 
+import { ControlsScreen } from './features/controls/ControlsScreen';
+
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
   maxHealth: 100,
@@ -90,6 +92,10 @@ const App = () => {
     setScreen('history');
   };
 
+  const handleControls = () => {
+    setScreen('controls');
+  };
+
   const handleRestart = () => {
     setIsPauseOptionsOpen(false);
     setGameControls(null);
@@ -140,6 +146,7 @@ const App = () => {
         onOptions={handleOptions}
         onRanking={handleRanking}
         onHistory={handleHistory}
+        onControls={handleControls}
       />
     );
   }
@@ -155,6 +162,14 @@ const App = () => {
   if (screen === 'history') {
     return (
       <HistoryScreen
+        onBack={() => setScreen('menu')}
+      />
+    );
+  }
+
+  if (screen === 'controls') {
+    return (
+      <ControlsScreen
         onBack={() => setScreen('menu')}
       />
     );

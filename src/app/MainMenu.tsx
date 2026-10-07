@@ -5,6 +5,7 @@ type MainMenuProps = {
     onOptions: () => void;
     onRanking: () => void;
     onHistory: () => void;
+    onControls: () => void;
 };
 
 export const MainMenu = ({
@@ -12,6 +13,7 @@ export const MainMenu = ({
     onOptions,
     onRanking,
     onHistory,
+    onControls,
 }: MainMenuProps) => {
     return (
         <MenuPanel
@@ -62,6 +64,14 @@ export const MainMenu = ({
                     onClick={onRanking}
                 >
                     RANKING
+                </button>
+
+                <button
+                    type="button"
+                    className="menu-button main-menu__secondary-button"
+                    onClick={onControls}
+                >
+                    CONTROLS
                 </button>
 
                 <button
