@@ -1,44 +1,8 @@
-import {
-    expect,
-    test,
-    type Page,
-} from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import type { } from '../../src/vite-env';
 
-const startGame = async (page: Page) => {
-    await page.goto('/');
-
-    await page
-        .getByRole('button', {
-            name: 'PLAY',
-            exact: true,
-        })
-        .click();
-
-    await expect(
-        page.getByRole('heading', {
-            name: 'READY?',
-            exact: true,
-        }),
-    ).toBeVisible({
-        timeout: 15_000,
-    });
-
-    await page
-        .getByRole('button', {
-            name: 'START',
-            exact: true,
-        })
-        .click();
-
-    await expect(
-        page.getByRole('button', {
-            name: 'Pause game',
-            exact: true,
-        }),
-    ).toBeVisible();
-};
+import { startGame } from './helpers/game';
 
 test.describe('Gameplay', () => {
     test('starts a battle using the real game flow', async ({
