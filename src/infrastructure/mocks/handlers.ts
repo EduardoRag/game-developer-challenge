@@ -56,6 +56,18 @@ const applyReadScenario = async () => {
 };
 
 export const handlers = [
+    http.get('/assets/png/default/:path*', () => {
+        const scenario = getMockScenario();
+
+        if (scenario !== 'asset-error') {
+            return;
+        }
+
+        return HttpResponse.text('Asset loading failed', {
+            status: 500,
+        });
+    }),
+
     http.post('/api/sessions', async ({ request }) => {
         const data =
             (await request.json()) as CreateSessionRequest;

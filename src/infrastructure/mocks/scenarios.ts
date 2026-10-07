@@ -5,7 +5,8 @@ export type MockScenario =
     | 'network-error'
     | 'server-error'
     | 'registration-timeout'
-    | 'registration-unavailable';
+    | 'registration-unavailable'
+    | 'asset-error';
 
 const DEFAULT_SCENARIO: MockScenario = 'success';
 
@@ -18,6 +19,7 @@ const isMockScenario = (value: string): value is MockScenario =>
         'server-error',
         'registration-timeout',
         'registration-unavailable',
+        'asset-error',
     ].includes(value);
 
 export const getMockScenario = (): MockScenario => {
