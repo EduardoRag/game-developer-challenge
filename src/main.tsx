@@ -9,13 +9,7 @@ import App from './App';
 import './index.css';
 
 const enableMocking = async () => {
-  if (!import.meta.env.DEV) {
-    return;
-  }
-
-  const { worker } = await import(
-    './infrastructure/mocks/browser'
-  );
+  const { worker } = await import('./infrastructure/mocks/browser');
 
   await worker.start({
     onUnhandledFrame: 'bypass',
