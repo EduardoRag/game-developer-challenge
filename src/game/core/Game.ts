@@ -13,6 +13,8 @@ import { ProjectileSystem } from '../systems/ProjectileSystem';
 import { SpawnSystem } from '../systems/SpawnSystem';
 import { WeaponSystem } from '../systems/WeaponSystem';
 
+import { AudioManager } from '../audio/AudioManager';
+
 import { Player } from '../entities/Player';
 
 import { GAME_CONFIG } from '../config/gameConfig';
@@ -48,6 +50,7 @@ export class Game {
     private readonly playerSystem = new PlayerSystem();
     private readonly combatSystem = new CombatSystem();
     private readonly projectileSystem = new ProjectileSystem();
+    private readonly audio = new AudioManager();
 
     private player: Player | null = null;
     private playerDamageEffect: ShipDamageEffect | null = null;
@@ -182,6 +185,9 @@ export class Game {
             this.handleVisibilityChange,
         );
 
+        this.audio.play('gameStart', 0.7);
+        this.audio.startAmbience();
+
         this.app.ticker.add(this.handleTick);
     }
 
@@ -189,6 +195,8 @@ export class Game {
         this.destroyed = true;
 
         this.input.stop();
+
+        this.audio.destroy();
 
         this.playerDamageEffect?.destroy();
         this.playerDamageEffect = null;
@@ -252,6 +260,8 @@ export class Game {
                 this.gameplayScale,
             );
 
+            this.audio.play('shipSinking', 0.75);
+
             this.endGame('shipDestroyed');
         } else if (this.timeRemaining <= 0) {
             this.endGame('timeUp');
@@ -291,6 +301,12 @@ export class Game {
             this.projectileTexture,
             this.projectileSystem,
         );
+
+        if (projectiles.length === 1) {
+            this.audio.play('cannonFire', 0.55);
+        } else if (projectiles.length === 3) {
+            this.audio.play('cannonBroadside', 0.65);
+        }
 
         for (const projectile of projectiles) {
             this.app.stage.addChild(projectile.sprite);
@@ -336,6 +352,10 @@ export class Game {
             this.player,
             this.collisionSystem,
         );
+
+        if (collidedChasers.length > 0) {
+            this.audio.play('shipCollision', 0.65);
+        }
 
         for (const chaser of collidedChasers) {
             const position = chaser.getPosition();
@@ -390,6 +410,10 @@ export class Game {
             this.projectileSystem,
             this.collisionSystem,
         );
+
+        if (impacts.length > 0) {
+            this.audio.play('shipWoodHit', 0.5);
+        }
 
         for (const impact of impacts) {
             ExplosionEffect.play(
@@ -448,6 +472,11 @@ export class Game {
             );
 
             this.enemySystem.destroyEnemy(enemy);
+        }
+
+        if (deadEnemies.length > 0) {
+            this.audio.play('shipExplosion', 0.7);
+            this.audio.play('scorePoint', 0.55);
         }
 
         this.score += deadEnemies.length;
@@ -694,6 +723,14 @@ export class Game {
 
         this.endReason = reason;
         this.gameState = 'gameOver';
+
+        this.audio.stopAmbience();
+
+        if (reason === 'timeUp') {
+            this.audio.play('gameComplete', 0.75);
+        } else {
+            this.audio.play('gameOver', 0.75);
+        }
     }
 
     private updateTimer(deltaTime: number) {
@@ -717,6 +754,10 @@ export class Game {
 
         this.gameState = 'paused';
         this.input.clear();
+
+        this.audio.pauseAmbience();
+        this.audio.play('gamePause', 0.6);
+
         this.emitSnapshot();
     }
 
@@ -727,6 +768,10 @@ export class Game {
 
         this.gameState = 'playing';
         this.input.clear();
+
+        this.audio.play('gameResume', 0.6);
+        this.audio.resumeAmbience();
+
         this.emitSnapshot();
     }
 
