@@ -13,6 +13,8 @@ const DEFAULT_PAGE_SIZE = 10;
 
 const DEFAULT_DELAY = 300;
 const HIGH_LATENCY_DELAY = 2500;
+const VARIABLE_LATENCY_SLOW_DELAY = 1200;
+const VARIABLE_LATENCY_FAST_DELAY = 150;
 const REGISTRATION_TIMEOUT_DELAY = 10000;
 
 const getPagination = (request: Request) => {
@@ -42,11 +44,25 @@ const paginate = <T>(
     return items.slice(start, start + pageSize);
 };
 
-const applyReadScenario = async () => {
+const applyReadScenario = async (
+    request: Request,
+) => {
     const scenario = getMockScenario();
 
     if (scenario === 'latency') {
         await delay(HIGH_LATENCY_DELAY);
+        return scenario;
+    }
+
+    if (scenario === 'variable-latency') {
+        const { page } = getPagination(request);
+
+        await delay(
+            page === 1
+                ? VARIABLE_LATENCY_SLOW_DELAY
+                : VARIABLE_LATENCY_FAST_DELAY,
+        );
+
         return scenario;
     }
 
@@ -132,10 +148,21 @@ export const handlers = [
 
     http.get('/api/ranking', async ({ request }) => {
         const { page, pageSize } = getPagination(request);
-        const scenario = await applyReadScenario();
+        const scenario = await applyReadScenario(request);
 
         if (scenario === 'network-error') {
             return HttpResponse.error();
+        }
+
+        if (scenario === 'client-error') {
+            return HttpResponse.json(
+                {
+                    message: 'Invalid ranking request.',
+                },
+                {
+                    status: 400,
+                },
+            );
         }
 
         if (scenario === 'server-error') {
@@ -170,10 +197,21 @@ export const handlers = [
 
     http.get('/api/history', async ({ request }) => {
         const { page, pageSize } = getPagination(request);
-        const scenario = await applyReadScenario();
+        const scenario = await applyReadScenario(request);
 
         if (scenario === 'network-error') {
             return HttpResponse.error();
+        }
+
+        if (scenario === 'client-error') {
+            return HttpResponse.json(
+                {
+                    message: 'Invalid history request.',
+                },
+                {
+                    status: 400,
+                },
+            );
         }
 
         if (scenario === 'server-error') {

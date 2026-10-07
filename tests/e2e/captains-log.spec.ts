@@ -126,6 +126,60 @@ test.describe('Captain\'s Log', () => {
         ).toBeVisible();
     });
 
+    test('handles a client error when loading ranking', async ({
+        page,
+    }) => {
+        await page.goto('/?mockScenario=client-error');
+
+        await page
+            .getByRole('button', {
+                name: 'RANKING',
+                exact: true,
+            })
+            .click();
+
+        await expect(
+            page.getByText(
+                'Could not load the ranking.',
+                { exact: true },
+            ),
+        ).toBeVisible();
+
+        await expect(
+            page.getByRole('button', {
+                name: 'Try Again',
+                exact: true,
+            }),
+        ).toBeVisible();
+    });
+
+    test('handles a client error when loading history', async ({
+        page,
+    }) => {
+        await page.goto('/?mockScenario=client-error');
+
+        await page
+            .getByRole('button', {
+                name: 'MATCH HISTORY',
+                exact: true,
+            })
+            .click();
+
+        await expect(
+            page.getByText(
+                'Could not load the history.',
+                { exact: true },
+            ),
+        ).toBeVisible();
+
+        await expect(
+            page.getByRole('button', {
+                name: 'TRY AGAIN',
+                exact: true,
+            }),
+        ).toBeVisible();
+    });
+
     test('returns to the main menu from ranking', async ({
         page,
     }) => {
