@@ -51,6 +51,7 @@ export class Game {
 
     private initialized = false;
     private destroyed = false;
+    private started = false;
 
     constructor(
         container: HTMLDivElement,
@@ -127,6 +128,19 @@ export class Game {
         }
 
         this.emitSnapshot();
+    }
+
+    public start() {
+        if (
+            this.destroyed ||
+            !this.initialized ||
+            !this.player ||
+            this.started
+        ) {
+            return;
+        }
+
+        this.started = true;
 
         this.input.start();
 

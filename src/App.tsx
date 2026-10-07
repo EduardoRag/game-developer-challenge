@@ -42,10 +42,12 @@ const App = () => {
 
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [gameKey, setGameKey] = useState(0);
-  const [snapshot, setSnapshot] =
-    useState<GameSnapshot>(INITIAL_SNAPSHOT);
-  const [isPauseOptionsOpen, setIsPauseOptionsOpen] =
-    useState(false);
+  const [snapshot, setSnapshot] = useState<GameSnapshot>(INITIAL_SNAPSHOT);
+  const [isPauseOptionsOpen, setIsPauseOptionsOpen] = useState(false);
+
+  const [isGameLoading, setIsGameLoading] = useState(false);
+  const [gameLoadError, setGameLoadError] = useState(false);
+  const [hasGameStarted, setHasGameStarted] = useState(false);
 
   const gameControlsRef = useRef<GameControlsApi | null>(null);
 
@@ -70,9 +72,10 @@ const App = () => {
     setGameControls(null);
     gameControlsRef.current = null;
 
-    setSessionConfig({ ...gameOptions });
+    setIsGameLoading(true);
+    setGameLoadError(false);
+    setHasGameStarted(false);
 
-    setIsPauseOptionsOpen(false);
     setSessionConfig({ ...gameOptions });
 
     setSnapshot({
@@ -101,9 +104,10 @@ const App = () => {
     setGameControls(null);
     gameControlsRef.current = null;
 
-    createSessionMutation.reset();
+    setIsGameLoading(true);
+    setGameLoadError(false);
+    setHasGameStarted(false);
 
-    setIsPauseOptionsOpen(false);
     createSessionMutation.reset();
 
     setSnapshot({
@@ -192,16 +196,69 @@ const App = () => {
         config={sessionConfig}
         onSnapshotChange={handleSnapshotChange}
         onGameReady={handleGameReady}
+        onLoadingChange={setIsGameLoading}
+        onLoadError={setGameLoadError}
       />
 
-      <Hud snapshot={snapshot} />
-
-      {snapshot.gameState !== 'gameOver' && gameControls && (
-        <GameControls
-          controls={gameControls}
-          isPaused={snapshot.gameState === 'paused'}
-        />
+      {isGameLoading && (
+        <div className="game-loading">
+          <div className="game-loading__content">
+            <h1>PREPARING THE BATTLE</h1>
+            <p>Loading ships and islands...</p>
+          </div>
+        </div>
       )}
+
+      {gameLoadError && (
+        <div className="game-loading">
+          <div className="game-loading__content">
+            <h1>FAILED TO LOAD</h1>
+            <p>The battle could not be prepared.</p>
+
+            <button
+              type="button"
+              className="menu-button"
+              onClick={handleRestart}
+            >
+              RETRY
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!isGameLoading &&
+        !gameLoadError &&
+        !hasGameStarted &&
+        gameControls && (
+          <div className="game-loading">
+            <div className="game-loading__content">
+              <h1>READY?</h1>
+              <p>Prepare for battle!</p>
+
+              <button
+                type="button"
+                className="menu-button"
+                onClick={() => {
+                  gameControls.start();
+                  setHasGameStarted(true);
+                }}
+              >
+                START
+              </button>
+            </div>
+          </div>
+        )}
+
+      {hasGameStarted && <Hud snapshot={snapshot} />}
+
+      {hasGameStarted &&
+        snapshot.gameState !== 'gameOver' &&
+        gameControls && (
+          <GameControls
+            controls={gameControls}
+            isPaused={snapshot.gameState === 'paused'}
+          />
+        )}
 
       {snapshot.gameState === 'paused' &&
         !isPauseOptionsOpen && (
