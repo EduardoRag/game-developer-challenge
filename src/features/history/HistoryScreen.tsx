@@ -10,7 +10,7 @@ type HistoryScreenProps = {
     onRanking: () => void;
 };
 
-const PAGE_SIZE = 5;
+const PAGE_SIZE = 4;
 const CURRENT_PLAYER_NAME = 'Captain Jack';
 
 const formatDate = (playedAt: string) => {
@@ -147,15 +147,24 @@ export const HistoryScreen = ({
                                             <li
                                                 key={entry.id}
                                                 className={`history-list__item ${isCurrentPlayer
-                                                        ? 'history-list__item--current'
-                                                        : ''
+                                                    ? 'history-list__item--current'
+                                                    : ''
                                                     }`}
                                             >
-                                                <span>
-                                                    {formatDate(
-                                                        entry.playedAt,
-                                                    )}
-                                                </span>
+                                                <div className="history-list__match">
+                                                    <span>
+                                                        {formatDate(
+                                                            entry.playedAt,
+                                                        )}
+                                                    </span>
+
+                                                    <small>
+                                                        {entry.playerName} · {entry.id}
+                                                        <br />
+                                                        Session: {entry.config.sessionDuration}s · Spawn:{' '}
+                                                        {entry.config.enemySpawnInterval}s
+                                                    </small>
+                                                </div>
 
                                                 <strong>
                                                     {entry.score}
