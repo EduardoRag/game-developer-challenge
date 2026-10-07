@@ -2,12 +2,20 @@ import type { GameSnapshot } from '../types/GameSnapshot';
 
 type GameOverProps = {
     snapshot: GameSnapshot;
+    isRegistering: boolean;
+    isRegistered: boolean;
+    hasRegistrationError: boolean;
+    onRetryRegistration: () => void;
     onRestart: () => void;
     onMainMenu: () => void;
 };
 
 export const GameOver = ({
     snapshot,
+    isRegistering,
+    isRegistered,
+    hasRegistrationError,
+    onRetryRegistration,
     onRestart,
     onMainMenu,
 }: GameOverProps) => {
@@ -49,6 +57,29 @@ export const GameOver = ({
                     <p className="game-over__summary">
                         POINTS · {formattedTime} · {resultReason}
                     </p>
+
+                    <div
+                        className="game-over__registration"
+                        aria-live="polite"
+                    >
+                        {isRegistering && <p>Saving battle result...</p>}
+
+                        {isRegistered && <p>Battle result saved.</p>}
+
+                        {hasRegistrationError && (
+                            <>
+                                <p>Could not save the battle result.</p>
+
+                                <button
+                                    type="button"
+                                    className="menu-button"
+                                    onClick={onRetryRegistration}
+                                >
+                                    TRY AGAIN
+                                </button>
+                            </>
+                        )}
+                    </div>
 
                     <div className="game-over__actions">
                         <button

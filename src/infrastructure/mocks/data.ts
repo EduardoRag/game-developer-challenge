@@ -7,6 +7,11 @@ export const sessions: GameHistoryEntry[] = [
 		playerName: 'Anne',
 		score: 1250,
 		duration: 120,
+		endReason: 'timeUp',
+		config: {
+			sessionDuration: 120,
+			enemySpawnInterval: 5,
+		},
 		playedAt: '2026-10-05T18:30:00.000Z',
 	},
 	{
@@ -14,6 +19,11 @@ export const sessions: GameHistoryEntry[] = [
 		playerName: 'Blackbeard',
 		score: 900,
 		duration: 98,
+		endReason: 'shipDestroyed',
+		config: {
+			sessionDuration: 120,
+			enemySpawnInterval: 5,
+		},
 		playedAt: '2026-10-05T17:15:00.000Z',
 	},
 	{
@@ -21,6 +31,11 @@ export const sessions: GameHistoryEntry[] = [
 		playerName: 'Calico Jack',
 		score: 650,
 		duration: 76,
+		endReason: 'shipDestroyed',
+		config: {
+			sessionDuration: 120,
+			enemySpawnInterval: 5,
+		},
 		playedAt: '2026-10-05T16:00:00.000Z',
 	},
 ];

@@ -40,11 +40,23 @@ export const handlers = [
 
         await delay(300);
 
+        const existingSession = sessions.find(
+            (session) => session.id === data.id,
+        );
+
+        if (existingSession) {
+            return HttpResponse.json(existingSession, {
+                status: 200,
+            });
+        }
+
         const session = {
-            id: crypto.randomUUID(),
+            id: data.id,
             playerName: data.playerName,
             score: data.score,
             duration: data.duration,
+            endReason: data.endReason,
+            config: data.config,
             playedAt: new Date().toISOString(),
         };
 

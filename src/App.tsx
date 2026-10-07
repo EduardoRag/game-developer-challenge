@@ -1,4 +1,9 @@
-import { useCallback, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
 import { GameCanvas } from './game/rendering/GameCanvas';
 import { GameOver } from './game/rendering/GameOver';
@@ -18,7 +23,9 @@ import { useCreateSessionMutation } from './infrastructure/api/sessionMutations'
 
 import { OptionsScreen } from './features/options/OptionsScreen';
 import { loadGameOptions } from './features/options/optionsStorage';
+
 import type { GameOptions } from './features/options/types';
+import type { CreateSessionRequest } from './infrastructure/api/types';
 
 import { PauseOverlay } from './game/rendering/PauseOverlay';
 
@@ -26,6 +33,7 @@ import { GameControls } from './game/rendering/GameControls';
 import type { GameControlsApi } from './game/types/GameControls';
 
 import { ControlsScreen } from './features/controls/ControlsScreen';
+
 
 const INITIAL_SNAPSHOT: GameSnapshot = {
   health: 100,
@@ -39,6 +47,7 @@ const INITIAL_SNAPSHOT: GameSnapshot = {
 
 const App = () => {
   const createSessionMutation = useCreateSessionMutation();
+  const { mutate: createSession } = createSessionMutation;
 
   const [screen, setScreen] = useState<AppScreen>('menu');
   const [gameKey, setGameKey] = useState(0);
@@ -50,6 +59,9 @@ const App = () => {
   const [hasGameStarted, setHasGameStarted] = useState(false);
 
   const gameControlsRef = useRef<GameControlsApi | null>(null);
+  const matchIdRef = useRef<string | null>(null);
+  const submittedMatchIdRef = useRef<string | null>(null);
+  const sessionRequestRef = useRef<CreateSessionRequest | null>(null);
 
   const [gameControls, setGameControls] = useState<GameControlsApi | null>(null);
 
@@ -67,7 +79,66 @@ const App = () => {
     [],
   );
 
+  useEffect(() => {
+    if (
+      snapshot.gameState !== 'gameOver' ||
+      !snapshot.endReason
+    ) {
+      return;
+    }
+
+    const matchId = matchIdRef.current;
+
+    if (
+      !matchId ||
+      submittedMatchIdRef.current === matchId
+    ) {
+      return;
+    }
+
+    const sessionRequest: CreateSessionRequest = {
+      id: matchId,
+      playerName: 'Captain Jack',
+      score: snapshot.score,
+      duration: Math.round(snapshot.elapsedTime),
+      endReason: snapshot.endReason,
+      config: {
+        sessionDuration: sessionConfig.sessionDuration,
+        enemySpawnInterval:
+          sessionConfig.enemySpawnInterval,
+      },
+    };
+
+    submittedMatchIdRef.current = matchId;
+    sessionRequestRef.current = sessionRequest;
+
+    createSession(sessionRequest);
+  }, [
+    snapshot.gameState,
+    snapshot.endReason,
+    snapshot.score,
+    snapshot.elapsedTime,
+    sessionConfig,
+    createSession,
+  ]);
+
+  const handleRetryRegistration = () => {
+    const sessionRequest = sessionRequestRef.current;
+
+    if (!sessionRequest) {
+      return;
+    }
+
+    createSessionMutation.mutate(sessionRequest);
+  };
+
   const handlePlay = () => {
+    matchIdRef.current = crypto.randomUUID();
+    submittedMatchIdRef.current = null;
+    sessionRequestRef.current = null;
+
+    createSessionMutation.reset();
+
     setIsPauseOptionsOpen(false);
     setGameControls(null);
     gameControlsRef.current = null;
@@ -100,6 +171,10 @@ const App = () => {
   };
 
   const handleRestart = () => {
+    matchIdRef.current = crypto.randomUUID();
+    submittedMatchIdRef.current = null;
+    sessionRequestRef.current = null;
+
     setIsPauseOptionsOpen(false);
     setGameControls(null);
     gameControlsRef.current = null;
@@ -122,6 +197,10 @@ const App = () => {
     setIsPauseOptionsOpen(false);
     setGameControls(null);
     gameControlsRef.current = null;
+
+    matchIdRef.current = null;
+    submittedMatchIdRef.current = null;
+    sessionRequestRef.current = null;
 
     setSnapshot(INITIAL_SNAPSHOT);
 
@@ -286,6 +365,10 @@ const App = () => {
       {snapshot.gameState === 'gameOver' && (
         <GameOver
           snapshot={snapshot}
+          isRegistering={createSessionMutation.isPending}
+          isRegistered={createSessionMutation.isSuccess}
+          hasRegistrationError={createSessionMutation.isError}
+          onRetryRegistration={handleRetryRegistration}
           onRestart={handleRestart}
           onMainMenu={handleMainMenu}
         />
