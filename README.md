@@ -510,21 +510,23 @@ A frequência observada ficou acima da meta de 60 FPS e reflete também a taxa d
 
 ### Entidades
 
-Foi realizada uma sessão configurada para a duração máxima de 180 segundos, coletando uma amostra por segundo enquanto o gameplay permanecia ativo.
+Foi realizada uma sessão completa configurada para a duração máxima de **180 segundos** e intervalo mínimo de spawn de **2 segundos**, coletando aproximadamente uma amostra por segundo durante o gameplay.
 
-A partida terminou antes dos 180 segundos configurados e foram coletadas **78 amostras**.
+Para impedir que a partida terminasse antecipadamente pela destruição do jogador, o movimento e o comportamento dos inimigos foram congelados através da instrumentação de testes. O sistema de spawn permaneceu ativo durante toda a sessão, permitindo observar o crescimento da quantidade de entidades em um cenário controlado e reproduzível.
+
+Foram coletadas **176 amostras**, com a última medição realizada em **179,52 segundos**.
 
 O maior número observado foi:
 
 | Métrica | Resultado |
 | --- | ---: |
-| Pico de entidades dinâmicas | 8 |
-| Inimigos no momento do pico | 2 |
-| Projéteis do jogador | 5 |
+| Pico de entidades dinâmicas | 92 |
+| Inimigos no momento do pico | 91 |
+| Projéteis do jogador | 0 |
 | Projéteis inimigos | 0 |
-| Momento do pico | 6,96 s |
+| Momento do pico | 178,51 s |
 
-Para essa medição, entidades dinâmicas incluem jogador, inimigos ativos e projéteis ativos.
+Para essa medição, entidades dinâmicas incluem o jogador, inimigos ativos e projéteis ativos.
 
 ### Memória
 
