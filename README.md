@@ -1,597 +1,269 @@
 # Pirate Battle
 
-Jogo de batalha naval 2D com visão top-down desenvolvido com **React, TypeScript e PixiJS**.
+Jogo de batalha naval 2D com visão top-down, desenvolvido para o desafio **Frontend Game Developer da Jungle Gaming**, com React, TypeScript e PixiJS.
 
-O projeto combina uma interface construída em React com uma camada de gameplay em PixiJS, incluindo combate naval, diferentes comportamentos de inimigos, partidas configuráveis, controles responsivos, APIs simuladas, ranking, histórico de partidas, testes end-to-end e regressão visual.
+O jogador controla um navio, enfrenta inimigos com comportamentos distintos e acumula pontos durante partidas configuráveis. A aplicação inclui controles de teclado e touch, áudio, ranking, histórico, API simulada com MSW e testes Playwright.
 
-## 🎮 Jogar
+**Endereço de publicação informado:** [Pirate Battle](https://pirate-battle-sand.vercel.app/). A disponibilidade e a correspondência do deploy com este código não foram verificadas nesta revisão.
 
-**Deploy:** https://pirate-battle-sand.vercel.app/
-
-A versão publicada utiliza a API simulada com MSW e pode ser executada sem depender de um backend externo.
+Este documento reúne uso, reprodução de cenários, testes e resultados de performance. [ARCHITECTURE.md](./ARCHITECTURE.md) detalha a integração React/PixiJS, os sistemas, os contratos HTTP e o gerenciamento de recursos.
 
 ## Tecnologias
 
-- React 19
-- TypeScript
-- PixiJS 8
-- Vite
-- TanStack Query
-- Axios
-- Mock Service Worker (MSW)
-- Playwright
-- ESLint
-- Prettier
+- React 19, TypeScript, PixiJS 8 e Vite 8.
+- Axios e TanStack Query 5 para HTTP e estado das consultas.
+- MSW para simulação de API no navegador.
+- Playwright para testes end-to-end e regressão visual.
+- ESLint e Prettier para análise e formatação.
 
-## Como executar o projeto
+As versões declaradas e os scripts estão em [package.json](./package.json); o lockfile registra as versões resolvidas.
 
-### Pré-requisitos
+## Execução local
 
-- Node.js
-- npm
+### Pré-requisitos e instalação
 
-### Instalação
+Utilize Node.js compatível com o Vite instalado: `^20.19.0 || >=22.12.0`, além de npm. O projeto não declara uma versão própria de Node em `engines`.
 
-Instale as dependências:
+Na raiz do projeto, instale as dependências do lockfile e o navegador usado nos testes:
 
 ```bash
-npm install
+npm ci
+npx playwright install chromium
 ```
 
-Instale os navegadores utilizados pelo Playwright:
+`npm install` também está disponível para instalação convencional. Os dois projetos Playwright configurados utilizam Chromium; não é necessário instalar Firefox ou WebKit para a suíte atual.
 
-```bash
-npx playwright install
+### Comandos
+
+| Objetivo              | Comando                   | Comportamento                                                                 |
+| --------------------- | ------------------------- | ----------------------------------------------------------------------------- |
+| Desenvolvimento       | `npm run dev`             | Inicia o Vite                                                                 |
+| Build                 | `npm run build`           | Executa `tsc -b` e, se passar, `vite build`                                   |
+| Preview               | `npm run preview`         | Serve o build existente em `dist/`; execute o build antes                     |
+| Lint                  | `npm run lint`            | Executa `eslint .`                                                            |
+| Verificação de tipos  | `npx tsc -b`              | Verifica os projetos referenciados pelo `tsconfig.json`, sem gerar JavaScript |
+| Playwright            | `npm run test:e2e`        | Executa a suíte E2E e visual                                                  |
+| Playwright interativo | `npm run test:e2e:ui`     | Abre a interface de execução                                                  |
+| Relatório Playwright  | `npm run test:e2e:report` | Abre o relatório HTML já gerado                                               |
+
+Não existe script `typecheck`. `tsc -b` cobre `src/` e `vite.config.ts`; os testes e `playwright.config.ts` não fazem parte desses projetos TypeScript. O modo build grava metadados incrementais em `node_modules/.tmp/`.
+
+O MSW é iniciado antes da montagem do React, tanto em desenvolvimento quanto em produção. Não há backend externo ou variável de ambiente obrigatória para a API simulada. O navegador precisa permitir Service Workers em contexto seguro, como localhost ou HTTPS.
+
+## Como jogar
+
+Selecione **PLAY**, aguarde o carregamento dos assets e pressione **START** na etapa **READY?**. Se o carregamento falhar, a interface apresenta **FAILED TO LOAD** e **RETRY**.
+
+### Controles
+
+| Ação                     | Teclado            |
+| ------------------------ | ------------------ |
+| Mover para frente        | `W` / `ArrowUp`    |
+| Girar para esquerda      | `A` / `ArrowLeft`  |
+| Girar para direita       | `D` / `ArrowRight` |
+| Disparo frontal          | `Space`            |
+| Disparo lateral esquerdo | `Q`                |
+| Disparo lateral direito  | `E`                |
+| Pausar                   | `Escape`           |
+
+O jogador não possui movimento de ré. Os botões na tela usam eventos de ponteiro para movimento, rotação e ataques, permitindo comandos simultâneos. Disparos são acionados ao pressionar: manter a tecla ou o botão pressionado não produz fogo automático.
+
+### Regras e balanceamento
+
+- O jogador começa com **100 pontos de vida**; Chasers e Shooters têm **50** cada.
+- O disparo frontal cria um projétil e tem cooldown de **0,7 s**. Cada lateral cria três projéteis e tem cooldown de **1,2 s**, independente da outra lateral e do frontal.
+- Projéteis do jogador e dos inimigos causam **15 de dano** por acerto.
+- O **Chaser** persegue o jogador, causa **20 de dano** por contato e é removido nessa colisão, sem conceder pontos.
+- O **Shooter** se aproxima ou recua para manter distância de combate e dispara quando está ao alcance, com cooldown de **1,5 s**.
+- Cada inimigo destruído pelos ataques do jogador concede **um ponto**.
+- A preparação tenta criar um Chaser e um Shooter. Durante a partida, cada spawn sorteia um dos tipos com probabilidade de 50%; a criação depende de encontrar posição segura.
+- Há uma ilha com área de colisão retangular. O jogador é limitado à arena; projéteis são removidos ao acertar alvos, obstáculos ou sair da arena.
+
+A partida termina por tempo esgotado (`timeUp`) ou vida zerada (`shipDestroyed`). Se ambos ocorrerem no mesmo frame, a destruição do jogador tem prioridade.
+
+A tela **BATTLE COMPLETE** mostra pontuação, tempo efetivamente jogado, motivo do término e estado do registro, com ações para repetir o envio, jogar outra vez ou retornar ao menu. Data, jogador, ID e configuração aparecem no histórico após o registro; esses detalhes não são exibidos na tela de resultado.
+
+### Configuração e pausa
+
+| Opção              | Padrão | Limites  | Incremento na interface |
+| ------------------ | -----: | -------- | ----------------------: |
+| Duração da partida |  120 s | 60–180 s |                    10 s |
+| Intervalo de spawn |    5 s | 2–15 s   |                     1 s |
+
+As alterações em **OPTIONS** são salvas imediatamente em `localStorage`. **PLAY** copia as opções atuais para a sessão. Alterações durante a pausa não afetam a partida em andamento. **PLAY AGAIN** e o retry de carregamento reutilizam a configuração dessa sessão; para aplicar novas opções, volte ao menu e selecione **PLAY**.
+
+A pausa pode ser acionada por `Escape` ou pelo botão na tela e ocorre automaticamente em `blur` ou quando o documento fica oculto. Tempo, movimento, spawn e cooldowns deixam de avançar. Inputs são limpos na pausa e retomada; recuperar foco não retoma a partida automaticamente. Renderização e animações visuais podem continuar, e a remoção temporizada de destroços não usa o relógio da simulação.
+
+### Feedback visual, áudio e responsividade
+
+Texturas dos navios mudam conforme a vida restante: dano intermediário com 60% ou menos, crítico com 30% ou menos e naufrágio na destruição. O fogo fica oculto acima de 60%, moderado acima de 30% até 60% e mais intenso com 30% ou menos. Há explosões, HUD de vida, pontos e tempo, além de barras de vida dos inimigos. A arquitetura registra uma limitação do fogo nos inimigos da primeira preparação.
+
+O áudio inclui disparos do jogador, impactos, colisões, destruição, pontuação, início, pausa, retomada, encerramento e ambientação oceânica. A ambientação pausa com o jogo e para no encerramento. Falhas de reprodução são ignoradas para não interromper o gameplay. Nem todos os arquivos sonoros fornecidos são utilizados, e não há opção de volume ou mute na interface.
+
+O canvas acompanha o tamanho do contêiner. Em altura inicial de até 500 px, o jogo aplica escala de 0,6 aos navios e a parâmetros espaciais de movimento e combate. A experiência mobile prioriza **landscape**; não há arena lógica fixa com proporções preservadas, e mudar o tamanho durante a partida não reconstrói o mundo nem recalcula essa escala.
+
+Há botões semânticos, labels nos controles, identificação de diálogos e mensagens de registro com `aria-live`. Esses recursos não constituem uma auditoria completa de acessibilidade.
+
+## Ranking, histórico e persistência
+
+Ranking e histórico apresentam carregamento, estado vazio, erro e nova tentativa. O ranking lista **partidas ordenadas por pontuação**, sem agregar pontuações por jogador, com cinco entradas por página. O histórico usa quatro entradas por página e mostra data, jogador, ID, pontos, duração, motivo do término e configuração. Entradas de `Captain Jack` recebem destaque; a identidade é demonstrativa, sem autenticação.
+
+As consultas usam Axios com timeout de **5 s** e TanStack Query com `staleTime` de **30 s**, uma repetição automática em caso de falha de consulta e refetch ao recuperar foco para dados desatualizados. Página e tamanho fazem parte da chave de cache. Após registro confirmado, todas as páginas de ranking e histórico são invalidadas. O cache das consultas fica em memória.
+
+| Chave de `localStorage`                | Conteúdo                            |
+| -------------------------------------- | ----------------------------------- |
+| `pirate-battle-options`                | Opções do jogo                      |
+| `pirate-battle-last-completed-session` | Payload da última partida concluída |
+| `pirate-battle-pending-session`        | Um payload pendente de registro     |
+
+Ao terminar uma partida, a aplicação salva o resultado e o pendente antes de enviar `POST /api/sessions`. Se o envio falhar, é possível repetir na tela de resultado. Ao montar a aplicação, um pendente armazenado é enviado automaticamente. As mutations não têm retry automático.
+
+Cada nova partida recebe um UUID; a recuperação reutiliza o ID original. O mock retorna o registro existente para um ID repetido, sem inserir outra entrada. Após sucesso, o pendente é removido somente se seu ID corresponder à resposta. Abandonar uma partida em andamento não gera resultado concluído.
+
+O armazenamento comporta **apenas uma pendência**: outra partida concluída pode sobrescrevê-la. A última partida permanece armazenada após refresh, mas não restaura a tela de resultado nem é mesclada ao histórico remoto. Os registros do MSW ficam em memória e voltam aos dados iniciais ao recarregar; apenas uma pendência ainda existente pode ser reenviada nessa montagem.
+
+## Cenários MSW: selecionar, reproduzir e resetar
+
+Selecione um cenário pelo parâmetro `mockScenario`, por exemplo `/?mockScenario=network-error`. Ausência do parâmetro ou valor desconhecido seleciona `success`. Os handlers consultam a URL a cada requisição.
+
+| Valor                      | Escopo                              | Comportamento                                                         |
+| -------------------------- | ----------------------------------- | --------------------------------------------------------------------- |
+| `success`                  | API                                 | Leituras e registro com atraso de 300 ms                              |
+| `empty`                    | Ranking e histórico                 | Lista vazia com `total: 0`; não apaga as sessões                      |
+| `latency`                  | Ranking e histórico                 | Atraso de 2.500 ms                                                    |
+| `variable-latency`         | Ranking e histórico                 | Página 1: 1.200 ms; demais páginas: 150 ms                            |
+| `network-error`            | Ranking e histórico                 | Erro de rede após o atraso padrão                                     |
+| `client-error`             | Ranking e histórico                 | HTTP 400 após o atraso padrão                                         |
+| `server-error`             | Ranking e histórico                 | HTTP 500 após o atraso padrão                                         |
+| `registration-timeout`     | Registro                            | Aguarda 10 s e retorna 504; Axios expira em 5 s, sem inserir a sessão |
+| `registration-unavailable` | Registro                            | HTTP 503 após 300 ms, sem inserir a sessão                            |
+| `asset-error`              | GET em `/assets/png/default/:path*` | HTTP 500 para assets abrangidos pelo handler                          |
+
+Os cenários de leitura não provocam falhas no POST; os de registro não provocam falhas nas consultas. `asset-error` não abrange áudio, SVGs ou todo o conteúdo estático, e assets já em cache podem não gerar nova requisição.
+
+### Reprodução manual
+
+1. **Consultas:** abra a URL com o cenário e entre em **RANKING** ou **MATCH HISTORY**. Para observar loading, use `latency`; para estado vazio, use `empty`. Erros de consulta são repetidos automaticamente uma vez antes do estado final de erro.
+2. **Registro:** abra `/?mockScenario=registration-timeout` ou `/?mockScenario=registration-unavailable`, selecione **PLAY**, depois **START**, e termine a partida. Confira a mensagem de falha e a chave pendente no armazenamento do navegador.
+3. **Assets:** abra `/?mockScenario=asset-error` em uma página recém-carregada e selecione **PLAY**. Aguarde **FAILED TO LOAD**. Se necessário, desative o cache HTTP nas ferramentas do navegador para evitar reutilizar imagens.
+
+Para encerrar uma partida rapidamente durante a reprodução em desenvolvimento, após **START**, execute no console do navegador:
+
+```js
+window.__PIRATE_BATTLE_E2E__?.setTimeRemaining(0.1);
 ```
 
-### Ambiente de desenvolvimento
+Essa instrumentação não é exposta no build de produção. Para reproduzir respostas fora de ordem, abra `variable-latency`, aguarde o menu e execute duas consultas simultâneas:
 
-```bash
-npm run dev
+```js
+await Promise.all(
+	[1, 2].map(async (page) => {
+		const response = await fetch(`/api/ranking?page=${page}&pageSize=5`);
+		console.log(await response.json());
+	}),
+);
 ```
 
-### Build de produção
+A página 2 deve responder antes da 1. Esse cenário aplica atrasos diferentes; não injeta dados incorretos nas respostas.
 
-```bash
-npm run build
+### Recuperação sem recarregar
+
+No console do navegador, mude o cenário para sucesso preservando os dados em memória:
+
+```js
+const url = new URL(window.location.href);
+url.searchParams.set('mockScenario', 'success');
+window.history.replaceState(null, '', url);
 ```
 
-Para executar localmente o build gerado:
+Em seguida, use **Try Again** no ranking, **TRY AGAIN** no histórico ou resultado, ou **RETRY** no erro de carregamento. O botão sozinho não remove o cenário de falha. Uma consulta já iniciada ainda pode terminar com o cenário anterior; repita após sua conclusão.
 
-```bash
-npm run preview
+### Reset dos dados
+
+Não existe endpoint ou botão de reset. Recarregar reinicia o cache de queries e as sessões do mock, mas preserva `localStorage` e dispara a recuperação de uma pendência existente.
+
+Para uma reprodução a partir dos padrões, remova somente as três chaves do projeto e recarregue em sucesso. Isso apaga opções e resultados locais:
+
+```js
+localStorage.removeItem('pirate-battle-options');
+localStorage.removeItem('pirate-battle-last-completed-session');
+localStorage.removeItem('pirate-battle-pending-session');
+const url = new URL(window.location.href);
+url.searchParams.delete('mockScenario');
+window.location.assign(url.href);
 ```
-
-### Lint
-
-```bash
-npm run lint
-```
-
-## Controles
-
-### Teclado
-
-| Ação | Controle |
-| --- | --- |
-| Mover para frente | `W` / `Arrow Up` |
-| Girar para esquerda | `A` |
-| Girar para direita | `D` |
-| Disparo frontal | `Space` |
-| Disparo lateral esquerdo | `Q` |
-| Disparo lateral direito | `E` |
-| Pausar | `Escape` |
-
-O navio não possui movimento de ré por decisão de gameplay.
-
-### Touch
-
-Durante a partida também são disponibilizados controles touch para dispositivos móveis, permitindo movimentação, rotação e ataques.
-
-A experiência mobile foi projetada principalmente para **orientação horizontal (landscape)**, permitindo manter a arena e os controles visíveis sem alterar as regras do jogo.
-
-## Gameplay
-
-O jogador controla um navio pirata dentro de uma arena naval com limites definidos.
-
-O objetivo é sobreviver até o fim do tempo da sessão enquanto destrói navios inimigos e evita ilhas, ataques e colisões.
-
-### Jogador
-
-O jogador possui:
-
-- Movimento para frente
-- Rotação para esquerda e direita
-- Canhão frontal
-- Disparo lateral esquerdo
-- Disparo lateral direito
-- Pontos de vida
-- Cooldowns independentes das armas
-
-O canhão frontal dispara um projétil.
-
-Cada ataque lateral dispara três projéteis pelo respectivo lado do navio.
-
-### Inimigos
-
-Existem dois tipos de inimigos.
-
-#### Chaser
-
-O Chaser persegue o jogador e causa dano através de contato.
-
-Quando um Chaser é destruído através da colisão/autodestruição, nenhum ponto é concedido ao jogador.
-
-#### Shooter
-
-O Shooter procura manter distância de combate e ataca o jogador utilizando projéteis.
-
-### Pontuação
-
-Cada inimigo destruído pelos ataques do jogador concede exatamente:
-
-```text
-1 ponto
-```
-
-Inimigos destruídos através da colisão/autodestruição do Chaser não concedem pontos.
-
-### Fim da partida
-
-Uma partida termina quando:
-
-- O tempo configurado chega a zero; ou
-- A vida do jogador chega a zero.
-
-A tela de resultado apresenta:
-
-- Tempo efetivamente jogado
-- Data
-- Identificação do jogador
-- Identificação da partida
-- Pontuação
-- Duração efetiva
-- Motivo do término
-- Configuração utilizada na partida (duração da sessão e intervalo de spawn)
-
-## Configurações
-
-A tela de Options permite configurar:
-
-| Configuração | Limites |
-| --- | --- |
-| Duração da partida | 60–180 segundos |
-| Intervalo de spawn dos inimigos | 2–15 segundos |
-
-As configurações são persistidas localmente e permanecem após atualizar a página.
-
-Ao iniciar uma partida, é criado um **snapshot das configurações atuais**.
-
-Dessa forma, alterações realizadas nas opções durante uma partida pausada afetam somente partidas futuras e não modificam as regras da sessão em andamento.
-
-## Pausa
-
-A partida pode ser pausada manualmente e também é pausada automaticamente quando a janela perde o foco ou o documento fica oculto.
-
-Enquanto o jogo está pausado:
-
-- A simulação é interrompida
-- O cronômetro da partida não avança
-- Os cooldowns das armas não avançam
-- O comportamento dos inimigos é interrompido
-- O estado dos inputs é limpo
-
-Ao recuperar o foco da janela, a partida não continua automaticamente. O jogador precisa selecionar explicitamente a opção de continuar.
-
-Isso evita que inputs acumulados ou antigos sejam aplicados ao retornar para o jogo.
-
-## Arquitetura
-
-A aplicação separa a interface da simulação em tempo real.
-
-```text
-src/
-├── app/
-├── features/
-│   ├── controls/
-│   ├── history/
-│   ├── options/
-│   └── ranking/
-├── game/
-│   ├── config/
-│   ├── core/
-│   ├── entities/
-│   ├── input/
-│   ├── rendering/
-│   ├── systems/
-│   └── types/
-├── infrastructure/
-│   ├── api/
-│   └── mocks/
-└── shared/
-```
-
-### React
-
-O React é responsável pela interface e navegação da aplicação, incluindo:
-
-- Menu principal
-- Options
-- Tela de controles
-- Ranking
-- Histórico de partidas
-- Estados de carregamento
-- Interface de pausa
-- HUD
-- Tela de resultado
-- Estados relacionados às requisições da API
-
-### PixiJS
-
-O PixiJS é responsável pela camada de gameplay em tempo real, incluindo:
-
-- Renderização da arena
-- Navios
-- Projéteis
-- Ilhas
-- Movimentação
-- Simulação dos inimigos
-- Colisões
-- Combate
-- Efeitos visuais
-
-Essa separação evita colocar o React no loop de renderização por frame. O React recebe snapshots do estado necessário para atualizar elementos da interface.
-
-## Game loop e simulação
-
-O gameplay é atualizado através do ticker do PixiJS.
-
-Movimentação, cooldowns e demais elementos temporais utilizam o delta de tempo dos frames em vez de assumir uma taxa fixa de atualização.
-
-Isso mantém o comportamento da simulação consistente mesmo quando a frequência de renderização varia.
-
-A simulação é dividida em responsabilidades como:
-
-- Movimento do jogador
-- Comportamento dos inimigos
-- Spawn de inimigos
-- Armas
-- Projéteis
-- Colisões
-- Tempo da partida
-- Efeitos visuais
-
-## Colisões e limites da arena
-
-A arena possui limites visíveis que restringem a área de gameplay.
-
-O tratamento de colisões contempla situações como:
-
-- Jogador contra os limites da arena
-- Jogador contra ilhas
-- Interações com inimigos
-- Contato com Chasers
-- Projéteis contra alvos válidos
-
-O sistema de spawn também aplica regras de segurança para evitar o surgimento de inimigos muito próximos ao jogador ou dentro das áreas protegidas dos obstáculos.
-
-## Feedback visual
-
-Os assets fornecidos no desafio são utilizados como base visual do jogo.
-
-O gameplay possui feedback através de:
-
-- Disparos e projéteis
-- Explosões
-- Feedback de dano
-- Indicadores de vida
-- Deterioração visual progressiva dos navios
-
-O estado visual de dano dos navios é alterado conforme a vida restante.
-
-Acima de 60% de vida, o efeito adicional de fogo permanece oculto. Entre 30% e 60%, o navio apresenta um efeito moderado de fogo. Com 30% ou menos, o efeito se torna mais intenso.
-
-Navios destruídos utilizam seus respectivos estados visuais de naufrágio.
-
-## Carregamento de assets e lifecycle
-
-Os recursos necessários ao gameplay são carregados antes que o combate seja liberado.
-
-A interface possui estados explícitos para:
-
-- Carregamento
-- Jogo pronto
-- Falha no carregamento
-- Nova tentativa
-
-Texturas reutilizáveis são carregadas antecipadamente quando apropriado.
-
-Quando a instância do jogo deixa de ser utilizada, seus recursos, listeners e elementos associados são destruídos para evitar o acúmulo de instâncias durante o ciclo de vida da aplicação.
-
-## Camada de API
-
-As requisições HTTP utilizam **Axios**.
-
-O gerenciamento de server state do ranking e histórico utiliza **TanStack Query**.
-
-A configuração do Query Client fornece:
-
-- Cache
-- `staleTime`
-- Retry
-- Atualização em background ao recuperar foco
-- Invalidação das queries após o registro de uma partida
-
-Quando uma partida é registrada com sucesso, as queries de ranking e histórico são invalidadas para que ambas possam refletir o novo resultado.
-
-## API simulada com MSW
-
-O worker do MSW é inicializado tanto no ambiente de desenvolvimento quanto no build de produção. Dessa forma, a aplicação publicada mantém os endpoints simulados disponíveis e pode ser avaliada sem depender de um backend externo.
-
-A API simulada contempla:
-
-- Registro de partidas
-- Ranking
-- Histórico
-- Paginação
-- Registro idempotente de partidas
-
-Os cenários disponíveis incluem:
-
-- Sucesso
-- Resposta vazia
-- Alta latência
-- Latência variável e respostas fora de ordem
-- Erro de rede
-- Erro HTTP 4xx
-- Erro HTTP 5xx
-- Timeout no registro da partida
-- Serviço de registro indisponível
-- Falha no carregamento de assets
-
-Os cenários podem ser selecionados através do parâmetro `mockScenario` da URL.
-
-Exemplo:
-
-```text
-/?mockScenario=network-error
-```
-
-Outros cenários:
-
-```text
-/?mockScenario=empty
-/?mockScenario=latency
-/?mockScenario=variable-latency
-/?mockScenario=client-error
-/?mockScenario=server-error
-/?mockScenario=registration-timeout
-/?mockScenario=registration-unavailable
-/?mockScenario=asset-error
-```
-
-Sem o parâmetro, a aplicação utiliza o cenário normal de sucesso.
-
-## Persistência e confiabilidade do registro
-
-A aplicação utiliza armazenamento local para:
-
-- Configurações do jogo
-- Última partida concluída
-- Registro pendente de partida
-
-Ao terminar uma partida, o resultado é persistido localmente antes da tentativa de registro.
-
-Caso a requisição falhe ou exceda o tempo limite, o resultado pendente continua armazenado e pode ser enviado novamente.
-
-A mesma identificação da partida é reutilizada durante o retry. A API simulada trata os IDs das sessões de forma idempotente, evitando que novas tentativas gerem partidas duplicadas.
-
-Após um registro bem-sucedido:
-
-- O registro pendente é removido
-- O ranking é invalidado
-- O histórico é invalidado
-
-Abandonar uma partida em andamento e retornar ao menu principal não gera um registro de partida concluída.
-
-## Ranking e histórico
-
-### Ranking
-
-A tela de ranking possui:
-
-- Estado de carregamento
-- Estado vazio
-- Estado de erro
-- Retry
-- Paginação
-- Identificação do jogador atual
-
-### Histórico de partidas
-
-Cada registro do histórico apresenta:
-
-- Data
-- Identificação do jogador
-- Identificação da partida
-- Pontuação
-- Duração efetiva
-- Motivo do término
-
-As partidas do jogador atual recebem destaque visual.
-
-## Responsividade e acessibilidade
-
-A interface possui suporte para desktop e dispositivos móveis.
-
-O canvas adapta sua apresentação ao viewport preservando as proporções da arena e as regras da simulação.
-
-No mobile, o gameplay foi projetado para orientação landscape.
-
-Também foram considerados aspectos de acessibilidade, incluindo:
-
-- Botões semânticos
-- Dialogs identificados
-- Labels acessíveis
-- Elementos de navegação
-- Estados visíveis de carregamento e erro
-- Controles por teclado
-- Controles touch
 
 ## Testes automatizados
 
-Os testes end-to-end utilizam **Playwright**.
+A suíte está em [tests/e2e](./tests/e2e), configurada por [playwright.config.ts](./playwright.config.ts). Executa em `desktop-chromium` (Desktop Chrome) e `mobile-chromium` (Pixel 7 landscape), contra `http://127.0.0.1:5173`. O Playwright inicia `npm run dev -- --host 127.0.0.1` e pode reutilizar um servidor existente fora de CI. Não executa contra o build de produção.
 
-Para executar a suíte:
+Os testes são paralelos; em CI, usam um worker e até duas repetições. O relatório é HTML, screenshots são coletados em falhas e traces na primeira repetição. O relatório depende de uma execução anterior.
 
-```bash
-npm run test:e2e
-```
+| Arquivos                                     | Cenários presentes                                                                                                     |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `navigation.spec.ts`, `captains-log.spec.ts` | Menu, opções, navegação, dados, estados vazios e erros HTTP 400/500                                                    |
+| `gameplay.spec.ts`                           | Movimento, limites, ilha, cooldown frontal, spawn seguro, Shooter, Chaser, pontuação, término, pausa e controles touch |
+| `match-flow.spec.ts`                         | Último resultado após refresh e abandono sem registro                                                                  |
+| `data-flow.spec.ts`                          | Registro refletido nas listas, paginação do ranking e retry de timeout                                                 |
+| `session-persistence.spec.ts`                | Recuperação de pendente após refresh e preservação local em indisponibilidade                                          |
+| `asset-loading.spec.ts`                      | READY e recuperação após erro de assets                                                                                |
+| `mock-scenarios.spec.ts`                     | Consultas diretas com respostas fora de ordem                                                                          |
+| `visual.spec.ts`                             | Menu, ranking, arena pausada e resultado                                                                               |
 
-Para abrir a interface interativa do Playwright:
+Os snapshots visuais existentes são referências **Windows/Chromium**, nos dois projetos. A captura da arena contém o overlay de pausa. Os testes visuais de gameplay fixam o sorteio, posicionam e congelam inimigos; usam a renderização real com condições controladas.
 
-```bash
-npm run test:e2e:ui
-```
+`window.__PIRATE_BATTLE_E2E__` permite consultar snapshots, posicionar e congelar inimigos, alterar tempo restante, causar dano ao jogador e congelar cooldowns das armas. Congelar inimigos interrompe seu comportamento e disparos, mas não desativa spawn, contato com Chasers ou projéteis já existentes.
 
-Para visualizar o último relatório:
-
-```bash
-npm run test:e2e:report
-```
-
-A cobertura E2E inclui fluxos como:
-
-- Movimento do jogador
-- Limites da arena
-- Colisão com ilhas
-- Cooldown das armas
-- Pontuação sem duplicação
-- Comportamento do Chaser
-- Comportamento do Shooter
-- Spawn seguro de inimigos
-- Fim da partida por tempo
-- Fim da partida pela destruição do jogador
-- Pausa manual
-- Pausa automática por perda de foco
-- Controles touch
-- Persistência de partida
-- Abandono de partida
-- Integração entre registro, ranking e histórico
-- Paginação
-- Timeout e retry do registro
-- Prevenção de registros duplicados
-
-### Regressão visual
-
-Os testes de regressão visual do Playwright cobrem os estados exigidos:
-
-- Menu principal
-- Arena em estado estável
-- Resultado da partida
-
-A tela de ranking também possui cobertura visual adicional.
-
-Nos cenários visuais de gameplay, a instrumentação de testes permite estabilizar elementos não determinísticos enquanto a renderização e as regras reais do jogo continuam sendo utilizadas.
+A cobertura descrita é baseada na leitura dos testes, sem afirmar aprovação da suíte nesta revisão. Não há suíte unitária configurada. Não foram encontrados testes específicos de áudio, profiling, todos os cooldowns laterais, paginação do histórico, recuperação manual dos erros de leitura ou validação completa do layout em dispositivos reais. O teste touch dispara eventos sintéticos e verifica a interface, sem comprovar todos os efeitos simultâneos na simulação. O teste de timeout confirma uma entrada após retry, mas não exercita o caso de o servidor ter gravado antes de a resposta se perder.
 
 ## Performance
 
-O alvo definido para o gameplay é **60 FPS**.
-
-As medições foram realizadas manualmente em um navegador baseado em Chromium durante o desenvolvimento.
+O alvo definido para o gameplay é **60 FPS**. Os resultados abaixo foram preservados da documentação original como **registros históricos de medições manuais em Chromium durante o desenvolvimento**. O ambiente utilizado foi Windows 11 Home, AMD Ryzen 7 9700X, AMD Radeon RX 9060 XT, 31 GB de RAM e Microsoft Edge 154. Os resultados não foram reproduzidos nesta revisão, e os arquivos brutos das medições, incluindo séries de amostras e heap snapshots, não estão disponíveis para confirmar os valores.
 
 ### FPS e frame time
 
-Uma medição de 60 segundos utilizando `requestAnimationFrame` apresentou:
+Uma medição de 60 segundos utilizando `requestAnimationFrame` registrou:
 
-| Métrica | Resultado observado |
-| --- | ---: |
-| Meta | 60 FPS |
-| FPS médio | 75,02 FPS |
-| Frame time médio | 13,33 ms |
-| p95 do frame time | 13,50 ms |
-| Frames observados | 4.501 |
+| Métrica           | Resultado observado |
+| ----------------- | ------------------: |
+| Meta              |              60 FPS |
+| FPS médio         |           75,02 FPS |
+| Frame time médio  |            13,33 ms |
+| p95 do frame time |            13,50 ms |
+| Frames observados |               4.501 |
 
-A frequência observada ficou acima da meta de 60 FPS e reflete também a taxa de atualização disponível no ambiente utilizado durante a medição.
+A frequência registrada ficou acima da meta e pode refletir a taxa de atualização do ambiente. Uma coleta por `requestAnimationFrame` não mede isoladamente o custo de atualização de `Game` nem comprova desempenho de GPU ou de todos os cenários de combate.
 
 ### Entidades
 
-Foi realizada uma sessão completa configurada para a duração máxima de **180 segundos** e intervalo mínimo de spawn de **2 segundos**, coletando aproximadamente uma amostra por segundo durante o gameplay.
+O registro descreve uma sessão de **180 segundos**, com intervalo de spawn de **2 segundos**, coletando aproximadamente uma amostra por segundo. Movimento e comportamento dos inimigos foram congelados pela instrumentação, enquanto o spawn permaneceu ativo, para evitar término antecipado. Foram registradas **176 amostras**, com a última em **179,52 segundos**.
 
-Para impedir que a partida terminasse antecipadamente pela destruição do jogador, o movimento e o comportamento dos inimigos foram congelados através da instrumentação de testes. O sistema de spawn permaneceu ativo durante toda a sessão, permitindo observar o crescimento da quantidade de entidades em um cenário controlado e reproduzível.
+| Métrica                     | Resultado registrado |
+| --------------------------- | -------------------: |
+| Pico de entidades dinâmicas |                   92 |
+| Inimigos no momento do pico |                   91 |
+| Projéteis do jogador        |                    0 |
+| Projéteis inimigos          |                    0 |
+| Momento do pico             |             178,51 s |
 
-Foram coletadas **176 amostras**, com a última medição realizada em **179,52 segundos**.
-
-O maior número observado foi:
-
-| Métrica | Resultado |
-| --- | ---: |
-| Pico de entidades dinâmicas | 92 |
-| Inimigos no momento do pico | 91 |
-| Projéteis do jogador | 0 |
-| Projéteis inimigos | 0 |
-| Momento do pico | 178,51 s |
-
-Para essa medição, entidades dinâmicas incluem o jogador, inimigos ativos e projéteis ativos.
+Nesse levantamento, entidades dinâmicas incluem jogador, inimigos ativos e projéteis ativos. O cenário avalia crescimento de entidades sob condições controladas; não representa combate ativo com todas as entidades simuladas. O mecanismo de congelamento existe no código, mas os números não podem ser confirmados sem as amostras originais.
 
 ### Memória
 
-Também foi realizada uma investigação utilizando heap snapshots antes e depois de cinco ciclos completos de criação e destruição da partida.
+O registro descreve heap snapshots antes e depois de **cinco ciclos completos de criação e destruição da partida**, com coleta de lixo após o quinto ciclo:
 
-Após o quinto ciclo, foi executada a coleta de lixo antes da comparação final.
-
-| Medição | Heap |
-| --- | ---: |
-| Antes dos ciclos | 56,1 MB |
+| Medição            |    Heap |
+| ------------------ | ------: |
+| Antes dos ciclos   | 56,1 MB |
 | Após 5 ciclos + GC | 55,2 MB |
 
-Não foi observado crescimento persistente do heap durante esse teste.
+A conclusão registrada foi ausência de crescimento persistente observado nesse experimento. Os dois valores não demonstram ausência de todos os vazamentos nem incluem necessariamente memória de GPU, texturas e áudio. O cache de texturas é intencionalmente preservado entre partidas; consumo e desempenho podem variar entre dispositivos, navegadores e cenários.
 
-Essa medição representa uma investigação realizada no ambiente de desenvolvimento e não significa que o consumo de memória será idêntico em todos os dispositivos, navegadores ou cenários.
+## Limitações e pontos não confirmados
 
-## Decisões de gameplay e balanceamento
-
-Algumas regras foram definidas como decisões de implementação:
-
-- Duração das partidas limitada entre 60 e 180 segundos
-- Intervalo de spawn limitado entre 2 e 15 segundos
-- Movimento do navio somente para frente
-- Autodestruição/contato do Chaser não concede pontuação
-- Experiência mobile priorizando orientação landscape
-- Estado READY/START entre o carregamento dos assets e o início da simulação
-
-Essas decisões mantêm as partidas previsíveis sem impedir diferentes configurações de sessão.
-
-## Instrumentação para testes
-
-Em ambiente de desenvolvimento, o jogo disponibiliza uma pequena interface utilizada pelos testes Playwright para tornar cenários dependentes de tempo reproduzíveis.
-
-Essa interface permite operações como:
-
-- Consultar snapshots do estado
-- Congelar o movimento dos inimigos
-- Posicionar inimigos
-- Controlar o tempo restante
-- Aplicar dano ao jogador
-- Congelar a progressão do cooldown das armas
-
-Essa instrumentação controla apenas o estado necessário para preparar cenários determinísticos. Movimento, colisões, combate, regras e renderização continuam utilizando a implementação real do jogo.
-
-## Limitações conhecidas
-
-- O backend é simulado com MSW e não utiliza um servidor persistente real.
-- A identidade do jogador utiliza atualmente o jogador de demonstração `Captain Jack`.
-- A experiência mobile de gameplay é otimizada para orientação landscape.
-- As medições de performance dependem de hardware, navegador, taxa de atualização da tela e ferramentas de desenvolvimento utilizadas.
-
-## Scripts disponíveis
-
-```bash
-npm run dev
-npm run build
-npm run lint
-npm run preview
-npm run test:e2e
-npm run test:e2e:ui
-npm run test:e2e:report
-```
+- API em memória com MSW, sem banco remoto, autenticação ou persistência do histórico após refresh. O ranking inicial usa dados demonstrativos, com pontuações que não representam o balanceamento atual.
+- Uma única pendência local, sem fila de resultados. Falhas de acesso ou escrita em `localStorage` não têm tratamento; o formato dos resultados lidos não recebe validação estrutural completa.
+- Mobile prioriza landscape. Resize não recalcula o mundo; colisões usam retângulos e não há navegação dos inimigos ao redor de obstáculos.
+- A pausa não congela todos os efeitos visuais. Limitações de limpeza assíncrona e de recursos estão detalhadas em [ARCHITECTURE.md](./ARCHITECTURE.md).
+- Não há confirmação nesta revisão de áudio em dispositivos reais, acessibilidade completa, aprovação atual dos testes, disponibilidade do deploy ou reprodução das métricas históricas.
+- A revisão documental não incluiu uma nova comparação integral com o enunciado oficial do desafio; a conformidade com todos os critérios de aceite não foi reavaliada nesta etapa.
